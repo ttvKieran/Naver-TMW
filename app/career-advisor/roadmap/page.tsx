@@ -1,21 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import roadmapsData from "@/data/career-roadmaps.json";
-
-interface RoadmapPhase {
-  title: string;
-  duration: string;
-  goals: string[];
-  learning_path?: Array<{
-    week: string;
-    topic: string;
-    resources: string[];
-    projects: string[];
-  }>;
-  milestones: string[];
-}
+import CareerRoadmapDiagram from "@/components/CareerRoadmapDiagram";
+import type { RoadmapPhases } from "@/lib/roadmapGraph";
 
 export default function RoadmapPage() {
   const router = useRouter();
@@ -37,19 +26,37 @@ export default function RoadmapPage() {
 
     if (career) {
       setSelectedCareer(career);
+      const firstPhaseKey = Object.keys(career.roadmap)[0];
+      if (firstPhaseKey) {
+        setExpandedPhase(firstPhaseKey);
+      }
     }
   }, [careerParam, router]);
 
-  if (!selectedCareer) {
+  const roadmap = selectedCareer?.roadmap as RoadmapPhases | undefined;
+  const phases = useMemo(() => {
+    if (!roadmap) return [];
+    return Object.entries(roadmap) as Array<
+      [string, RoadmapPhases[keyof RoadmapPhases]]
+    >;
+  }, [roadmap]);
+
+  const handlePhaseSelect = useCallback((phaseKey: string | null) => {
+    if (!phaseKey) return;
+    setExpandedPhase(phaseKey);
+    const phaseSection = document.getElementById(`phase-${phaseKey}`);
+    if (phaseSection) {
+      phaseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [setExpandedPhase]);
+
+  if (!selectedCareer || !roadmap) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
-
-  const roadmap = selectedCareer.roadmap;
-  const phases = Object.entries(roadmap);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
@@ -94,6 +101,25 @@ export default function RoadmapPage() {
           </div>
         </div>
 
+        {/* Interactive Diagram */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Interactive Roadmap</h2>
+              <p className="text-sm text-gray-600">
+                Click a phase to jump to its detailed curriculum and milestones.
+              </p>
+            </div>
+            <div className="text-xs font-semibold text-indigo-600">
+              Drag to pan & Scroll to zoom
+            </div>
+          </div>
+          <CareerRoadmapDiagram
+            phases={roadmap}
+            onSelectPhase={handlePhaseSelect}
+          />
+        </div>
+
         {/* Skills Required */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Kỹ Năng Cần Thiết</h2>
@@ -129,8 +155,12 @@ export default function RoadmapPage() {
         <div className="space-y-4">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Lộ Trình Chi Tiết</h2>
 
-          {phases.map(([phaseKey, phaseData]: [string, any]) => (
-            <div key={phaseKey} className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {phases.map(([phaseKey, phaseData]) => (
+            <div
+              key={phaseKey}
+              id={`phase-${phaseKey}`}
+              className="bg-white rounded-xl shadow-lg overflow-hidden"
+            >
               <button
                 onClick={() => setExpandedPhase(expandedPhase === phaseKey ? '' : phaseKey)}
                 className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
