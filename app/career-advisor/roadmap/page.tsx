@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import roadmapsData from "@/data/career-roadmaps.json";
-import CareerRoadmapDiagram from "@/components/CareerRoadmapDiagram";
+import CareerRoadmapDiagram, { DiagramDetailSelection } from "@/components/CareerRoadmapDiagram";
 import type { RoadmapPhases } from "@/lib/roadmapGraph";
 
 export default function RoadmapPage() {
@@ -13,6 +13,14 @@ export default function RoadmapPage() {
   
   const [selectedCareer, setSelectedCareer] = useState<any>(null);
   const [expandedPhase, setExpandedPhase] = useState<string>('phase1');
+  const [selectedDetail, setSelectedDetail] = useState<null | {
+    kind: 'learning_path' | 'goal' | 'milestone';
+    phaseTitle: string;
+    title: string;
+    subtitle?: string;
+    resources?: string[];
+    projects?: string[];
+  }>(null);
 
   useEffect(() => {
     if (!careerParam) {
@@ -34,21 +42,60 @@ export default function RoadmapPage() {
   }, [careerParam, router]);
 
   const roadmap = selectedCareer?.roadmap as RoadmapPhases | undefined;
-  const phases = useMemo(() => {
-    if (!roadmap) return [];
-    return Object.entries(roadmap) as Array<
-      [string, RoadmapPhases[keyof RoadmapPhases]]
-    >;
-  }, [roadmap]);
-
   const handlePhaseSelect = useCallback((phaseKey: string | null) => {
-    if (!phaseKey) return;
-    setExpandedPhase(phaseKey);
-    const phaseSection = document.getElementById(`phase-${phaseKey}`);
-    if (phaseSection) {
-      phaseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!phaseKey) {
+      setExpandedPhase('');
+      setSelectedDetail(null);
+      return;
     }
-  }, [setExpandedPhase]);
+    setExpandedPhase(phaseKey);
+    setSelectedDetail(null);
+  }, []);
+
+  const handleDetailSelect = useCallback((detail: DiagramDetailSelection | null) => {
+    if (!detail) {
+      setSelectedDetail(null);
+      return;
+    }
+
+    if (!roadmap) return;
+    const phase = roadmap[detail.phaseKey];
+    if (!phase) return;
+
+    if (detail.type === 'topic') {
+      if (detail.source === 'learning_path' && phase.learning_path) {
+        const entry = phase.learning_path[detail.topicIndex];
+        if (!entry) return;
+        setSelectedDetail({
+          kind: 'learning_path',
+          phaseTitle: phase.title,
+          title: entry.topic,
+          subtitle: `Week ${entry.week}`,
+          resources: entry.resources,
+          projects: entry.projects,
+        });
+      } else {
+        const goal = phase.goals[detail.topicIndex];
+        if (!goal) return;
+        setSelectedDetail({
+          kind: 'goal',
+          phaseTitle: phase.title,
+          title: goal,
+        });
+      }
+      return;
+    }
+
+    if (detail.type === 'milestone') {
+      const milestone = phase.milestones[detail.milestoneIndex];
+      if (!milestone) return;
+      setSelectedDetail({
+        kind: 'milestone',
+        phaseTitle: phase.title,
+        title: milestone,
+      });
+    }
+  }, [roadmap]);
 
   if (!selectedCareer || !roadmap) {
     return (
@@ -67,7 +114,7 @@ export default function RoadmapPage() {
             onClick={() => router.back()}
             className="text-indigo-600 hover:text-indigo-800 mb-4 flex items-center gap-2"
           >
-            ← Quay lại
+            &larr; Quay lại
           </button>
 
           <div className="flex items-start justify-between">
@@ -116,13 +163,76 @@ export default function RoadmapPage() {
           </div>
           <CareerRoadmapDiagram
             phases={roadmap}
+            activePhaseKey={expandedPhase}
             onSelectPhase={handlePhaseSelect}
+            onSelectDetail={handleDetailSelect}
           />
         </div>
 
+        {/* Detail Context Panel */}
+        {/* <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-indigo-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Context Window</h3>
+              <p className="text-sm text-gray-500">Select any topic or milestone node to preview its details.</p>
+            </div>
+            {selectedDetail && (
+              <button
+                onClick={() => setSelectedDetail(null)}
+                className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {selectedDetail ? (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs uppercase text-gray-500 tracking-wide">
+                  {selectedDetail.kind === 'learning_path' && 'Learning Path'}
+                  {selectedDetail.kind === 'goal' && 'Goal'}
+                  {selectedDetail.kind === 'milestone' && 'Milestone'}
+                </p>
+                <h4 className="text-2xl font-semibold text-gray-900">{selectedDetail.title}</h4>
+                <p className="text-sm text-gray-500">Phase: {selectedDetail.phaseTitle}</p>
+                {selectedDetail.subtitle && (
+                  <p className="text-sm text-indigo-600 mt-1">{selectedDetail.subtitle}</p>
+                )}
+              </div>
+
+              {selectedDetail.resources && selectedDetail.resources.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 mb-2">Resources</p>
+                  <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
+                    {selectedDetail.resources.map((resource, idx) => (
+                      <li key={idx}>{resource}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {selectedDetail.projects && selectedDetail.projects.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 mb-2">Projects / Practice</p>
+                  <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
+                    {selectedDetail.projects.map((project, idx) => (
+                      <li key={idx}>{project}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">
+              No item selected yet. Hover and click on any child node (topics or milestones) to see its summary here.
+            </div>
+          )}
+        </div> */}
+
         {/* Skills Required */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Kỹ Năng Cần Thiết</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Kỹ năng cần thiết</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -130,7 +240,7 @@ export default function RoadmapPage() {
               <ul className="space-y-2">
                 {selectedCareer.required_skills.technical.map((skill: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-1">✓</span>
+                    <span className="text-indigo-600 mt-1">-</span>
                     <span className="text-gray-700">{skill}</span>
                   </li>
                 ))}
@@ -142,112 +252,13 @@ export default function RoadmapPage() {
               <ul className="space-y-2">
                 {selectedCareer.required_skills.soft_skills.map((skill: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-1">✓</span>
+                    <span className="text-indigo-600 mt-1">-</span>
                     <span className="text-gray-700">{skill}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-        </div>
-
-        {/* Roadmap Phases */}
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Lộ Trình Chi Tiết</h2>
-
-          {phases.map(([phaseKey, phaseData]) => (
-            <div
-              key={phaseKey}
-              id={`phase-${phaseKey}`}
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
-            >
-              <button
-                onClick={() => setExpandedPhase(expandedPhase === phaseKey ? '' : phaseKey)}
-                className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
-              >
-                <div className="text-left">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {phaseData.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mt-1">
-                    {phaseData.duration}
-                  </p>
-                </div>
-                <span className="text-2xl text-gray-400">
-                  {expandedPhase === phaseKey ? '▼' : '▶'}
-                </span>
-              </button>
-
-              {expandedPhase === phaseKey && (
-                <div className="p-6 border-t border-gray-200 bg-gray-50">
-                  {/* Goals */}
-                  <div className="mb-6">
-                    <h4 className="font-semibold text-gray-800 mb-3">Mục Tiêu</h4>
-                    <ul className="space-y-2">
-                      {phaseData.goals.map((goal: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-green-600 mt-1">✓</span>
-                          <span className="text-gray-700">{goal}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Learning Path */}
-                  {phaseData.learning_path && (
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-gray-800 mb-3">Chi Tiết Học Tập</h4>
-                      <div className="space-y-4">
-                        {phaseData.learning_path.map((item: any, idx: number) => (
-                          <div key={idx} className="bg-white p-4 rounded-lg border border-gray-200">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">
-                                Tuần {item.week}
-                              </span>
-                              <h5 className="font-semibold text-gray-900">{item.topic}</h5>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-4 mt-3">
-                              <div>
-                                <p className="text-sm font-semibold text-gray-700 mb-2">Resources:</p>
-                                <ul className="text-sm space-y-1">
-                                  {item.resources.map((resource: string, ridx: number) => (
-                                    <li key={ridx} className="text-gray-600">{resource}</li>
-                                  ))}
-                                </ul>
-                              </div>
-
-                              <div>
-                                <p className="text-sm font-semibold text-gray-700 mb-2">Projects:</p>
-                                <ul className="text-sm space-y-1">
-                                  {item.projects.map((project: string, pidx: number) => (
-                                    <li key={pidx} className="text-gray-600">• {project}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Milestones */}
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-3">Milestones</h4>
-                    <ul className="space-y-2">
-                      {phaseData.milestones.map((milestone: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-yellow-500 mt-1"></span>
-                          <span className="text-gray-700">{milestone}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
         </div>
 
         {/* Companies & Certifications */}
@@ -268,7 +279,7 @@ export default function RoadmapPage() {
 
           {selectedCareer.companies_hiring && (
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Công Ty Đang Tuyển</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Công ty ứng tuyển</h3>
               <div className="flex flex-wrap gap-2">
                 {selectedCareer.companies_hiring.map((company: string, idx: number) => (
                   <span

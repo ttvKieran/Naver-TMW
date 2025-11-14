@@ -781,7 +781,7 @@
       },
       "roadmap": {
         "phase1": {
-          "title": "Math & Programming (Tháng 1-4)",
+          "title": "Math & Programming",
           "duration": "4 months",
           "goals": [
             "Python mastery",
@@ -837,7 +837,7 @@
           ]
         },
         "phase2": {
-          "title": "Deep Learning (Tháng 5-12)",
+          "title": "Deep Learning",
           "duration": "8 months",
           "goals": [
             "Neural Networks",
@@ -910,7 +910,7 @@
           ]
         },
         "phase3": {
-          "title": "Advanced AI (Tháng 13-24)",
+          "title": "Advanced AI",
           "duration": "12 months",
           "goals": [
             "LLMs & Transformers",
