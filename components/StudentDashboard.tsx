@@ -1,325 +1,287 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import ProfileEditor from './ProfileEditor';
+import { predictCareers } from '@/lib/career-matching';
 
-interface Skill {
-  name: string;
-  value: number;
-}
-
-interface PersonalityTrait {
-  name: string;
-  value: number;
-}
+// Dynamically import ReactFlow component to avoid SSR issues
+const RoadmapFlow = dynamic(() => import('./RoadmapFlow'), { ssr: false });
 
 interface StudentDashboardProps {
-  student: {
-    id: string;
-    name: string;
-    actualCareer: string;
-    gpa: number;
-    personality: {
-      mbti: string;
-      traits: {
-        analytical: number;
-        creative: number;
-        teamwork: number;
-        leadership: number;
-        technical: number;
-      };
-    };
-    skills: {
-      programming: number;
-      problemSolving: number;
-      communication: number;
-      systemDesign: number;
-      dataAnalysis: number;
-    };
-    interests: string[];
-  };
-  hotCareers: Array<{
-    id: string;
-    title: string;
-    description: string;
-    overview: {
-      salary_range: string;
-      job_growth: string;
-      difficulty: string;
-      time_to_proficiency: string;
-    };
-  }>;
-  currentRoadmap?: {
-    title: string;
-    description: string;
-    roadmap: {
-      beginner?: { title: string; duration: string; goals: string[] };
-      intermediate?: { title: string; duration: string; goals: string[] };
-      advanced?: { title: string; duration: string; goals: string[] };
-      expert?: { title: string; duration: string; goals: string[] };
-    };
-  };
+    initialStudent: any;
+    hotCareers: any[];
+    allRoadmaps: any[];
 }
 
-// biểu đồ kỹ năng 
+// Reuse the existing chart components
 function SkillsChart({ skills }: { skills: Record<string, number> }) {
-  const skillsArray = Object.entries(skills).map(([name, value]) => ({
-    name: name.replace(/([A-Z])/g, ' $1').trim(),
-    value,
-  }));
+    const skillsArray = Object.entries(skills).map(([name, value]) => ({
+        name: name.replace(/([A-Z])/g, ' $1').trim(),
+        value,
+    }));
 
-  return (
-    <div className="space-y-4">
-      {skillsArray.map((skill) => (
-        <div key={skill.name}>
-          <div className="flex justify-between mb-1">
-            <span className="text-sm font-medium text-gray-700 capitalize">
-              {skill.name}
-            </span>
-            <span className="text-sm text-gray-600">{skill.value}/10</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${(skill.value / 10) * 100}%` }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// biểu đồ tính cách 
-function PersonalityRadar({ traits }: { traits: Record<string, number> }) {
-  const traitsArray = Object.entries(traits).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value,
-  }));
-
-  const size = 200;
-  const center = size / 2;
-  const maxRadius = 80;
-  const levels = 5;
-
-  // Tính toán điểm cho polygon
-  const angleStep = (2 * Math.PI) / traitsArray.length;
-  const points = traitsArray.map((trait, index) => {
-    const angle = index * angleStep - Math.PI / 2;
-    const radius = (trait.value / 10) * maxRadius;
-    const x = center + radius * Math.cos(angle);
-    const y = center + radius * Math.sin(angle);
-    return `${x},${y}`;
-  }).join(' ');
-
-  // Tính toán điểm cho các đường lưới
-  const gridPoints = Array.from({ length: levels }, (_, levelIndex) => {
-    const radius = ((levelIndex + 1) / levels) * maxRadius;
-    return traitsArray.map((_, index) => {
-      const angle = index * angleStep - Math.PI / 2;
-      const x = center + radius * Math.cos(angle);
-      const y = center + radius * Math.sin(angle);
-      return `${x},${y}`;
-    }).join(' ');
-  });
-
-  return (
-    <div className="flex flex-col items-center">
-      <svg width={size} height={size} className="mb-4">
-        {/* Grid levels */}
-        {gridPoints.map((gridPoint, index) => (
-          <polygon
-            key={index}
-            points={gridPoint}
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="1"
-          />
-        ))}
-
-        {/* Axes */}
-        {traitsArray.map((_, index) => {
-          const angle = index * angleStep - Math.PI / 2;
-          const x = center + maxRadius * Math.cos(angle);
-          const y = center + maxRadius * Math.sin(angle);
-          return (
-            <line
-              key={index}
-              x1={center}
-              y1={center}
-              x2={x}
-              y2={y}
-              stroke="#e5e7eb"
-              strokeWidth="1"
-            />
-          );
-        })}
-
-        {/* Data polygon */}
-        <polygon
-          points={points}
-          fill="rgba(59, 130, 246, 0.2)"
-          stroke="#3b82f6"
-          strokeWidth="2"
-        />
-
-        {/* Data points */}
-        {traitsArray.map((trait, index) => {
-          const angle = index * angleStep - Math.PI / 2;
-          const radius = (trait.value / 10) * maxRadius;
-          const x = center + radius * Math.cos(angle);
-          const y = center + radius * Math.sin(angle);
-          return (
-            <circle
-              key={index}
-              cx={x}
-              cy={y}
-              r="4"
-              fill="#3b82f6"
-            />
-          );
-        })}
-      </svg>
-
-      {/* Legend */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        {traitsArray.map((trait) => (
-          <div key={trait.name} className="flex justify-between items-center">
-            <span className="text-gray-700">{trait.name}:</span>
-            <span className="font-semibold text-blue-600 ml-2">{trait.value}/10</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default function StudentDashboard({ student, hotCareers, currentRoadmap }: StudentDashboardProps) {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">{student.name}</h2>
-            <p className="text-gray-600 mt-1">ID: {student.id}</p>
-            <div className="flex gap-3 mt-3">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                {student.personality.mbti}
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                {student.actualCareer}
-              </span>
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">GPA</div>
-            <div className="text-5xl font-bold text-blue-600">{student.gpa.toFixed(1)}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Biểu đồ kỹ năng */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Kỹ Năng
-          </h3>
-          <SkillsChart skills={student.skills} />
-        </div>
-
-        {/* Biểu đồ tính cách */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Tính Cách ({student.personality.mbti})
-          </h3>
-          <PersonalityRadar traits={student.personality.traits} />
-        </div>
-      </div>
-
-      {/* Sở thích */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-          <span className="mr-2"></span>
-          Sở Thích
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {student.interests.map((interest) => (
-            <span
-              key={interest}
-              className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium"
-            >
-              {interest}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Nghề nghiệp hot và Roadmap */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Danh sách nghề nghiệp hot */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Nghề Nghiệp Hot
-          </h3>
-          <div className="space-y-4">
-            {hotCareers.slice(0, 5).map((career) => (
-              <div key={career.id} className="border-l-4 border-orange-500 pl-3 py-2">
-                <h4 className="font-semibold text-gray-900">{career.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  {career.overview.salary_range}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {career.overview.job_growth}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Roadmap đang theo đuổi */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Roadmap Đang Theo Đuổi
-          </h3>
-          {currentRoadmap ? (
-            <div>
-              <h4 className="text-lg font-semibold text-blue-600 mb-2">
-                {currentRoadmap.title}
-              </h4>
-              <p className="text-gray-600 mb-4">{currentRoadmap.description}</p>
-              
-              <div className="space-y-4">
-                {Object.entries(currentRoadmap.roadmap).map(([level, phase]: [string, any]) => (
-                  <div key={level} className="border-l-4 border-blue-500 pl-4 py-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-semibold text-gray-900 capitalize">
-                        {phase.title}
-                      </h5>
-                      <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                        {phase.duration}
-                      </span>
+    return (
+        <div className="space-y-4">
+            {skillsArray.map((skill) => (
+                <div key={skill.name}>
+                    <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium text-gray-700 capitalize">
+                            {skill.name}
+                        </span>
+                        <span className="text-sm text-gray-600">{skill.value}/10</span>
                     </div>
-                    <ul className="space-y-1">
-                      {phase.goals.slice(0, 3).map((goal: string, idx: number) => (
-                        <li key={idx} className="text-sm text-gray-700 flex items-start">
-                          <span className="mr-2">•</span>
-                          <span>{goal}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500">Chưa có roadmap cho nghề nghiệp này.</p>
-          )}
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div
+                            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${(skill.value / 10) * 100}%` }}
+                        />
+                    </div>
+                </div>
+            ))}
         </div>
-      </div>
-    </div>
-  );
+    );
+}
+
+function PersonalityRadar({ traits }: { traits: Record<string, number> }) {
+    const traitsArray = Object.entries(traits).map(([name, value]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        value,
+    }));
+
+    const size = 200;
+    const center = size / 2;
+    const maxRadius = 80;
+    const levels = 5;
+    const angleStep = (2 * Math.PI) / traitsArray.length;
+
+    const points = traitsArray.map((trait, index) => {
+        const angle = index * angleStep - Math.PI / 2;
+        const radius = (trait.value / 10) * maxRadius;
+        const x = center + radius * Math.cos(angle);
+        const y = center + radius * Math.sin(angle);
+        return `${x},${y}`;
+    }).join(' ');
+
+    const gridPoints = Array.from({ length: levels }, (_, levelIndex) => {
+        const radius = ((levelIndex + 1) / levels) * maxRadius;
+        return traitsArray.map((_, index) => {
+            const angle = index * angleStep - Math.PI / 2;
+            const x = center + radius * Math.cos(angle);
+            const y = center + radius * Math.sin(angle);
+            return `${x},${y}`;
+        }).join(' ');
+    });
+
+    return (
+        <div className="flex flex-col items-center">
+            <svg width={size} height={size} className="mb-4 overflow-visible">
+                {gridPoints.map((gridPoint, index) => (
+                    <polygon key={index} points={gridPoint} fill="none" stroke="#e5e7eb" strokeWidth="1" />
+                ))}
+                {traitsArray.map((_, index) => {
+                    const angle = index * angleStep - Math.PI / 2;
+                    const x = center + maxRadius * Math.cos(angle);
+                    const y = center + maxRadius * Math.sin(angle);
+                    return <line key={index} x1={center} y1={center} x2={x} y2={y} stroke="#e5e7eb" strokeWidth="1" />;
+                })}
+                <polygon points={points} fill="rgba(99, 102, 241, 0.2)" stroke="#6366f1" strokeWidth="2" />
+                {traitsArray.map((trait, index) => {
+                    const angle = index * angleStep - Math.PI / 2;
+                    const radius = (trait.value / 10) * maxRadius;
+                    const x = center + radius * Math.cos(angle);
+                    const y = center + radius * Math.sin(angle);
+                    return <circle key={index} cx={x} cy={y} r="4" fill="#6366f1" />;
+                })}
+            </svg>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                {traitsArray.map((trait) => (
+                    <div key={trait.name} className="flex justify-between items-center min-w-[100px]">
+                        <span className="text-gray-600">{trait.name}</span>
+                        <span className="font-semibold text-indigo-600 ml-2">{trait.value}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function StudentDashboard({
+    initialStudent,
+    hotCareers,
+    allRoadmaps
+}: StudentDashboardProps) {
+    const [student, setStudent] = useState(initialStudent);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+
+    // Initialize selected career from student's actual career
+    useEffect(() => {
+        if (student.actualCareer && !selectedCareerId) {
+            setSelectedCareerId(student.actualCareer);
+        }
+    }, [student.actualCareer, selectedCareerId]);
+
+    // Calculate predictions whenever student data changes
+    const predictions = useMemo(() => {
+        const profileForPrediction = {
+            ...student,
+            mbti: student.personality.mbti,
+            traits: student.personality.traits
+        };
+        return predictCareers(profileForPrediction);
+    }, [student]);
+
+    // Get current roadmap based on selected career
+    const currentRoadmap = useMemo(() => {
+        if (!selectedCareerId) return null;
+        return allRoadmaps.find(
+            (career: any) =>
+                career.title.toLowerCase() === selectedCareerId.toLowerCase() ||
+                career.id === selectedCareerId.toLowerCase().replace(/\s+/g, '-')
+        );
+    }, [selectedCareerId, allRoadmaps]);
+
+    const handleProfileUpdate = (newData: any) => {
+        setStudent(newData);
+    };
+
+    return (
+        <div className="space-y-8">
+            {isEditing && (
+                <ProfileEditor
+                    initialData={student}
+                    onUpdate={handleProfileUpdate}
+                    onClose={() => setIsEditing(false)}
+                />
+            )}
+
+            {/* Header Card */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50 -mr-16 -mt-16"></div>
+
+                <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <h2 className="text-4xl font-bold text-gray-900">{student.name}</h2>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="p-2 text-gray-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50"
+                                title="Edit Profile"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p className="text-gray-500 font-medium">ID: {student.id}</p>
+
+                        <div className="flex flex-wrap gap-3 mt-4">
+                            <span className="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold shadow-sm">
+                                MBTI: {student.personality.mbti}
+                            </span>
+                            <span className="px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold shadow-sm">
+                                Target: {student.actualCareer}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-8 bg-gray-50 px-8 py-4 rounded-xl border border-gray-100">
+                        <div className="text-center">
+                            <div className="text-sm text-gray-500 font-medium mb-1">GPA</div>
+                            <div className="text-4xl font-bold text-blue-600">{student.gpa.toFixed(1)}</div>
+                        </div>
+                        <div className="w-px h-12 bg-gray-200"></div>
+                        <div className="text-center">
+                            <div className="text-sm text-gray-500 font-medium mb-1">Skills Avg</div>
+                            <div className="text-4xl font-bold text-purple-600">
+                                {(Object.values(student.skills).reduce((a: any, b: any) => a + b, 0) as number / 5).toFixed(1)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Column: Stats */}
+                <div className="lg:col-span-4 space-y-8">
+                    <div className="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">Skill Set</h3>
+                        <SkillsChart skills={student.skills} />
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">Personality Profile</h3>
+                        <PersonalityRadar traits={student.personality.traits} />
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4">Interests</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {student.interests.map((interest: string) => (
+                                <span key={interest} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                                    {interest}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Career & Roadmap */}
+                <div className="lg:col-span-8 space-y-8">
+                    {/* AI Career Predictions */}
+                    <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <span className="text-2xl">✨</span> AI Career Matches
+                            </h3>
+                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                                Based on your profile
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {predictions.slice(0, 4).map((pred: any) => (
+                                <button
+                                    key={pred.career}
+                                    onClick={() => setSelectedCareerId(pred.career)}
+                                    className={`text-left p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${selectedCareerId === pred.career
+                                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                                        : 'border-gray-200 hover:border-blue-300 bg-white'
+                                        }`}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-gray-900">{pred.career}</h4>
+                                        <span className={`text-sm font-bold px-2 py-0.5 rounded ${pred.matchScore >= 0.8 ? 'bg-green-100 text-green-700' :
+                                            pred.matchScore >= 0.6 ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-red-100 text-red-700'
+                                            }`}>
+                                            {Math.round(pred.matchScore * 100)}% Match
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                                        {pred.reasons[0]}
+                                    </p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Interactive Roadmap */}
+                    <div className="bg-white rounded-2xl shadow-lg p-6 min-h-[500px]">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">Learning Roadmap</h3>
+                            {currentRoadmap && (
+                                <span className="text-sm font-medium text-gray-500">
+                                    {currentRoadmap.title}
+                                </span>
+                            )}
+                        </div>
+
+                        <RoadmapFlow roadmapData={currentRoadmap} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }

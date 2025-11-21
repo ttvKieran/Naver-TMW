@@ -44,14 +44,12 @@ export default async function DashboardPage() {
   }
 
   const careersData = JSON.parse(careersFile);
-  
+
+  // Get all roadmaps (careers)
+  const allRoadmaps = careersData.careers;
+
+  // Get hot careers (just top 6 for display)
   const hotCareers = careersData.careers.slice(0, 6);
-  
-  const currentRoadmap = careersData.careers.find(
-    (career: any) => 
-      career.title.toLowerCase() === student.actualCareer.toLowerCase() ||
-      career.id === student.actualCareer.toLowerCase().replace(/\s+/g, '-')
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -79,10 +77,10 @@ export default async function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <StudentDashboard 
-          student={student}
+        <StudentDashboard
+          initialStudent={student}
           hotCareers={hotCareers}
-          currentRoadmap={currentRoadmap}
+          allRoadmaps={allRoadmaps}
         />
       </main>
     </div>

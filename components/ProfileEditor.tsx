@@ -1,0 +1,175 @@
+'use client';
+
+import React, { useState } from 'react';
+
+interface ProfileEditorProps {
+    initialData: any;
+    onUpdate: (newData: any) => void;
+    onClose: () => void;
+}
+
+export default function ProfileEditor({ initialData, onUpdate, onClose }: ProfileEditorProps) {
+    const [formData, setFormData] = useState(initialData);
+
+    const handleChange = (section: string, field: string, value: any) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                [field]: Number(value)
+            }
+        }));
+    };
+
+    const handleSimpleChange = (field: string, value: any) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onUpdate(formData);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b sticky top-0 bg-white z-10 flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-8">
+                    {/* Basic Info */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Basic Info</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">GPA</label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="4.0"
+                                    value={formData.gpa}
+                                    onChange={(e) => handleSimpleChange('gpa', Number(e.target.value))}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">MBTI</label>
+                                <select
+                                    value={formData.personality.mbti}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setFormData((prev: any) => ({
+                                            ...prev,
+                                            personality: {
+                                                ...prev.personality,
+                                                mbti: val
+                                            }
+                                        }));
+                                    }}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                >
+                                    {['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'].map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Skills */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Skills (1-10)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {Object.entries(formData.skills).map(([key, value]: [string, any]) => (
+                                <div key={key}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        value={value}
+                                        onChange={(e) => handleChange('skills', key, e.target.value)}
+                                        className="w-full accent-blue-600"
+                                    />
+                                    <div className="flex justify-between text-xs text-gray-500">
+                                        <span>1</span>
+                                        <span className="font-medium text-blue-600">{value}</span>
+                                        <span>10</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Traits */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Personality Traits (1-10)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {Object.entries(formData.personality.traits).map(([key, value]: [string, any]) => (
+                                <div key={key}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                                        {key}
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        value={value}
+                                        onChange={(e) => {
+                                            const newVal = Number(e.target.value);
+                                            setFormData((prev: any) => ({
+                                                ...prev,
+                                                personality: {
+                                                    ...prev.personality,
+                                                    traits: {
+                                                        ...prev.personality.traits,
+                                                        [key]: newVal
+                                                    }
+                                                }
+                                            }));
+                                        }}
+                                        className="w-full accent-purple-600"
+                                    />
+                                    <div className="flex justify-between text-xs text-gray-500">
+                                        <span>1</span>
+                                        <span className="font-medium text-purple-600">{value}</span>
+                                        <span>10</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
