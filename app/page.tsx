@@ -1,15 +1,52 @@
 import ExampleCard from "@/components/ExampleCard";
 
-export default function Home() {
+export default async function Home() {
+  // Fetch students from database for selection
+  let students = [];
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students`, {
+      cache: 'no-store'
+    });
+    const data = await response.json();
+    students = data.students || [];
+  } catch (error) {
+    console.error('Error loading students:', error);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold mb-2 text-black">ClovaX API Cookbook</h1>
+          <h1 className="text-4xl font-bold mb-2 text-black">Career Advisor AI</h1>
           <p className="text-lg text-black">
-            Interactive examples showcasing Naver's ClovaX Chat Completions API
+            Hệ thống tư vấn nghề nghiệp thông minh với ClovaX API
           </p>
+          
+          {/* Student Selector */}
+          {students.length > 0 && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-3">Chọn sinh viên:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {students.map((student: any) => (
+                  <a
+                    key={student.studentCode}
+                    href={`/dashboard?id=${student.studentCode}`}
+                    className="p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all"
+                  >
+                    <div className="font-medium text-gray-900">{student.fullName}</div>
+                    <div className="text-sm text-gray-600">{student.studentCode}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      GPA: {student.gpa?.toFixed(1)} | {student.personality?.mbti}
+                    </div>
+                    {student.currentCareer && (
+                      <div className="text-xs text-blue-600 mt-1">{student.currentCareer}</div>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

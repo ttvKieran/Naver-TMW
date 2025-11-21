@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,7 +7,6 @@ import CareerRoadmapDiagram, { DiagramDetailSelection } from "@/components/Caree
 import type { RoadmapPhases } from "@/lib/roadmapGraph";
 
 export default function RoadmapPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const careerParam = searchParams?.get('career');
   
@@ -23,14 +22,34 @@ export default function RoadmapPage() {
   }>(null);
 
   useEffect(() => {
-    if (!careerParam) {
-      router.push('/career-advisor');
+    if (!careerId) {
+      setError('Career ID is required');
+      setLoading(false);
       return;
     }
 
-    const career = roadmapsData.careers.find(
-      c => c.title === careerParam
-    );
+    const fetchRoadmap = async () => {
+      try {
+        const res = await fetch(`/api/roadmaps?careerId=${careerId}`);
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to fetch roadmap');
+        }
+        
+        setRoadmap(data.roadmap);
+        if (data.roadmap?.levels?.[0]) {
+          setExpandedLevels(new Set([data.roadmap.levels[0].levelId]));
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoadmap();
+  }, [careerId]);
 
     if (career) {
       setSelectedCareer(career);
@@ -39,7 +58,8 @@ export default function RoadmapPage() {
         setExpandedPhase(firstPhaseKey);
       }
     }
-  }, [careerParam, router]);
+    setExpandedLevels(newExpanded);
+  };
 
   const roadmap = selectedCareer?.roadmap as RoadmapPhases | undefined;
   const handlePhaseSelect = useCallback((phaseKey: string | null) => {
@@ -99,20 +119,22 @@ export default function RoadmapPage() {
 
   if (!selectedCareer || !roadmap) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải roadmap...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="text-indigo-600 hover:text-indigo-800 mb-4 flex items-center gap-2"
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+          <Link
+            href={`/dashboard?id=${studentId || 'STU001'}`}
+            className="text-purple-600 hover:underline mb-4 inline-block"
           >
             &larr; Quay lại
           </button>
@@ -290,27 +312,8 @@ export default function RoadmapPage() {
                   </span>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* CTA */}
-        <div className="mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-          <h3 className="text-2xl font-bold mb-2">Sẵn Sàng Bắt Đầu?</h3>
-          <p className="mb-6 opacity-90">
-            Hãy lưu lại roadmap này và bắt đầu hành trình của bạn ngay hôm nay!
-          </p>
-          <div className="flex gap-4">
-            <button className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-              Tải Roadmap (PDF)
-            </button>
-            <button
-              onClick={() => router.push('/career-advisor')}
-              className="bg-indigo-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-900 transition-colors"
-            >
-              Thử Lại Với Profile Khác
-            </button>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
