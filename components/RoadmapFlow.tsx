@@ -17,15 +17,15 @@ import 'reactflow/dist/style.css';
 // Custom Node Component
 const RoadmapNode = ({ data }: { data: any }) => {
     return (
-        <div className={`px-4 py-3 shadow-lg rounded-xl border-2 min-w-[200px] bg-white ${data.isTarget ? 'border-blue-500 shadow-blue-100' : 'border-gray-200'
+        <div className={`px-4 py-3 shadow-lg rounded-2xl border-2 min-w-[200px] bg-white transition-all ${data.isTarget ? 'border-indigo-500 shadow-indigo-100 ring-2 ring-indigo-50' : 'border-gray-200'
             }`}>
             <Handle type="target" position={Position.Left} className="!bg-gray-400" />
 
             <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${data.phase === 'phase1' ? 'bg-green-100 text-green-700' :
-                            data.phase === 'phase2' ? 'bg-blue-100 text-blue-700' :
-                                'bg-purple-100 text-purple-700'
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${data.phase === 'phase1' ? 'bg-emerald-100 text-emerald-700' :
+                        data.phase === 'phase2' ? 'bg-indigo-100 text-indigo-700' :
+                            'bg-purple-100 text-purple-700'
                         }`}>
                         {data.duration}
                     </span>
@@ -39,7 +39,7 @@ const RoadmapNode = ({ data }: { data: any }) => {
                 </ul>
             </div>
 
-            <Handle type="source" position={Position.Right} className="!bg-blue-500" />
+            <Handle type="source" position={Position.Right} className="!bg-indigo-500" />
         </div>
     );
 };
@@ -88,10 +88,10 @@ export default function RoadmapFlow({ roadmapData }: RoadmapFlowProps) {
                     source: phases[index - 1],
                     target: phaseKey,
                     animated: true,
-                    style: { stroke: '#3b82f6', strokeWidth: 2 },
+                    style: { stroke: '#6366f1', strokeWidth: 2 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
-                        color: '#3b82f6',
+                        color: '#6366f1',
                     },
                 });
             }
@@ -107,14 +107,14 @@ export default function RoadmapFlow({ roadmapData }: RoadmapFlowProps) {
 
     if (!roadmapData) {
         return (
-            <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                <p className="text-gray-500">Select a career to view its roadmap</p>
+            <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                <p className="text-gray-500 font-medium">Select a career to view its roadmap</p>
             </div>
         );
     }
 
     return (
-        <div className="h-[500px] w-full bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+        <div className="h-[500px] w-full bg-gray-50/50 rounded-2xl border border-gray-200 overflow-hidden">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -124,7 +124,7 @@ export default function RoadmapFlow({ roadmapData }: RoadmapFlowProps) {
                 fitView
                 attributionPosition="bottom-right"
             >
-                <Background color="#e5e7eb" gap={20} />
+                <Background color="#e0e7ff" gap={20} />
                 <Controls />
             </ReactFlow>
         </div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import roadmapsData from "@/data/career-roadmaps.json";
 import CareerRoadmapDiagram, { DiagramDetailSelection } from "@/components/CareerRoadmapDiagram";
 import type { RoadmapPhases } from "@/lib/roadmapGraph";
@@ -9,7 +10,7 @@ import type { RoadmapPhases } from "@/lib/roadmapGraph";
 export default function RoadmapPage() {
   const searchParams = useSearchParams();
   const careerParam = searchParams?.get('career');
-  
+
   const [selectedCareer, setSelectedCareer] = useState<any>(null);
   const [expandedPhase, setExpandedPhase] = useState<string>('phase1');
   const [selectedDetail, setSelectedDetail] = useState<null | {
@@ -22,46 +23,21 @@ export default function RoadmapPage() {
   }>(null);
 
   useEffect(() => {
-    if (!careerId) {
-      setError('Career ID is required');
-      setLoading(false);
-      return;
-    }
-
-    const fetchRoadmap = async () => {
-      try {
-        const res = await fetch(`/api/roadmaps?careerId=${careerId}`);
-        const data = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to fetch roadmap');
+    if (careerParam) {
+      const career = roadmapsData.careers.find(c => c.title === careerParam);
+      if (career) {
+        setSelectedCareer(career);
+        // Set initial expanded phase if available
+        if (career.roadmap && Object.keys(career.roadmap).length > 0) {
+          // Default to phase1 if it exists, otherwise the first key
+          setExpandedPhase('phase1');
         }
-        
-        setRoadmap(data.roadmap);
-        if (data.roadmap?.levels?.[0]) {
-          setExpandedLevels(new Set([data.roadmap.levels[0].levelId]));
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRoadmap();
-  }, [careerId]);
-
-    if (career) {
-      setSelectedCareer(career);
-      const firstPhaseKey = Object.keys(career.roadmap)[0];
-      if (firstPhaseKey) {
-        setExpandedPhase(firstPhaseKey);
       }
     }
-    setExpandedLevels(newExpanded);
-  };
+  }, [careerParam]);
 
   const roadmap = selectedCareer?.roadmap as RoadmapPhases | undefined;
+
   const handlePhaseSelect = useCallback((phaseKey: string | null) => {
     if (!phaseKey) {
       setExpandedPhase('');
@@ -119,51 +95,54 @@ export default function RoadmapPage() {
 
   if (!selectedCareer || !roadmap) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải roadmap...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-100 border-t-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Đang tải roadmap...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
           <Link
-            href={`/dashboard?id=${studentId || 'STU001'}`}
-            className="text-purple-600 hover:underline mb-4 inline-block"
+            href="/career-advisor/results"
+            className="inline-flex items-center text-gray-500 hover:text-indigo-600 mb-6 transition-colors font-medium"
           >
-            &larr; Quay lại
-          </button>
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại kết quả
+          </Link>
 
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
                 {selectedCareer.title}
               </h1>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-8 text-lg leading-relaxed max-w-3xl">
                 {selectedCareer.description}
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <p className="text-xs text-green-700 font-semibold">Mức lương</p>
-                  <p className="text-sm font-bold text-green-900">{selectedCareer.overview.salary_range}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                  <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider mb-1">Mức lương</p>
+                  <p className="text-base font-bold text-emerald-900">{selectedCareer.overview.salary_range}</p>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-xs text-blue-700 font-semibold">Tăng trưởng</p>
-                  <p className="text-sm font-bold text-blue-900">{selectedCareer.overview.job_growth}</p>
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                  <p className="text-xs text-blue-700 font-bold uppercase tracking-wider mb-1">Tăng trưởng</p>
+                  <p className="text-base font-bold text-blue-900">{selectedCareer.overview.job_growth}</p>
                 </div>
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <p className="text-xs text-orange-700 font-semibold">Độ khó</p>
-                  <p className="text-sm font-bold text-orange-900">{selectedCareer.overview.difficulty}</p>
+                <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                  <p className="text-xs text-orange-700 font-bold uppercase tracking-wider mb-1">Độ khó</p>
+                  <p className="text-base font-bold text-orange-900">{selectedCareer.overview.difficulty}</p>
                 </div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <p className="text-xs text-purple-700 font-semibold">Thời gian</p>
-                  <p className="text-sm font-bold text-purple-900">{selectedCareer.overview.time_to_proficiency}</p>
+                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                  <p className="text-xs text-purple-700 font-bold uppercase tracking-wider mb-1">Thời gian</p>
+                  <p className="text-base font-bold text-purple-900">{selectedCareer.overview.time_to_proficiency}</p>
                 </div>
               </div>
             </div>
@@ -171,111 +150,58 @@ export default function RoadmapPage() {
         </div>
 
         {/* Interactive Diagram */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Interactive Roadmap</h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-500 mt-1">
                 Click a phase to jump to its detailed curriculum and milestones.
               </p>
             </div>
-            <div className="text-xs font-semibold text-indigo-600">
+            <div className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
               Drag to pan & Scroll to zoom
             </div>
           </div>
-          <CareerRoadmapDiagram
-            phases={roadmap}
-            activePhaseKey={expandedPhase}
-            onSelectPhase={handlePhaseSelect}
-            onSelectDetail={handleDetailSelect}
-          />
+          <div className="border border-gray-100 rounded-xl overflow-hidden bg-gray-50/50">
+            <CareerRoadmapDiagram
+              phases={roadmap}
+              activePhaseKey={expandedPhase}
+              onSelectPhase={handlePhaseSelect}
+              onSelectDetail={handleDetailSelect}
+            />
+          </div>
         </div>
 
-        {/* Detail Context Panel */}
-        {/* <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-indigo-100">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">Context Window</h3>
-              <p className="text-sm text-gray-500">Select any topic or milestone node to preview its details.</p>
-            </div>
-            {selectedDetail && (
-              <button
-                onClick={() => setSelectedDetail(null)}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          {selectedDetail ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs uppercase text-gray-500 tracking-wide">
-                  {selectedDetail.kind === 'learning_path' && 'Learning Path'}
-                  {selectedDetail.kind === 'goal' && 'Goal'}
-                  {selectedDetail.kind === 'milestone' && 'Milestone'}
-                </p>
-                <h4 className="text-2xl font-semibold text-gray-900">{selectedDetail.title}</h4>
-                <p className="text-sm text-gray-500">Phase: {selectedDetail.phaseTitle}</p>
-                {selectedDetail.subtitle && (
-                  <p className="text-sm text-indigo-600 mt-1">{selectedDetail.subtitle}</p>
-                )}
-              </div>
-
-              {selectedDetail.resources && selectedDetail.resources.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold text-gray-800 mb-2">Resources</p>
-                  <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                    {selectedDetail.resources.map((resource, idx) => (
-                      <li key={idx}>{resource}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {selectedDetail.projects && selectedDetail.projects.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold text-gray-800 mb-2">Projects / Practice</p>
-                  <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                    {selectedDetail.projects.map((project, idx) => (
-                      <li key={idx}>{project}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-sm text-gray-500">
-              No item selected yet. Hover and click on any child node (topics or milestones) to see its summary here.
-            </div>
-          )}
-        </div> */}
-
         {/* Skills Required */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Kỹ năng cần thiết</h2>
-          
-          <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Kỹ năng cần thiết</h2>
+
+          <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="font-semibold text-gray-800 mb-3">Technical Skills</h3>
-              <ul className="space-y-2">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">🛠️</span>
+                Technical Skills
+              </h3>
+              <ul className="space-y-3">
                 {selectedCareer.required_skills.technical.map((skill: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-1">-</span>
-                    <span className="text-gray-700">{skill}</span>
+                  <li key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-indigo-600 font-bold mt-0.5">•</span>
+                    <span className="text-gray-700 font-medium">{skill}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-800 mb-3">Soft Skills</h3>
-              <ul className="space-y-2">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">🤝</span>
+                Soft Skills
+              </h3>
+              <ul className="space-y-3">
                 {selectedCareer.required_skills.soft_skills.map((skill: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-1">-</span>
-                    <span className="text-gray-700">{skill}</span>
+                  <li key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-purple-600 font-bold mt-0.5">•</span>
+                    <span className="text-gray-700 font-medium">{skill}</span>
                   </li>
                 ))}
               </ul>
@@ -284,15 +210,17 @@ export default function RoadmapPage() {
         </div>
 
         {/* Companies & Certifications */}
-        <div className="grid md:grid-cols-2 gap-6 mt-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {selectedCareer.certifications && (
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Certifications Recommended</h3>
-              <ul className="space-y-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span className="text-xl">📜</span> Certifications Recommended
+              </h3>
+              <ul className="space-y-3">
                 {selectedCareer.certifications.map((cert: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-600"></span>
-                    <span className="text-gray-700">{cert}</span>
+                  <li key={idx} className="flex items-start gap-3">
+                    <span className="text-green-500 mt-1">✓</span>
+                    <span className="text-gray-700 font-medium">{cert}</span>
                   </li>
                 ))}
               </ul>
@@ -300,20 +228,22 @@ export default function RoadmapPage() {
           )}
 
           {selectedCareer.companies_hiring && (
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Công ty ứng tuyển</h3>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span className="text-xl">🏢</span> Công ty ứng tuyển
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {selectedCareer.companies_hiring.map((company: string, idx: number) => (
                   <span
                     key={idx}
-                    className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium"
+                    className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-100"
                   >
                     {company}
                   </span>
                 ))}
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
       </div>
     </div>

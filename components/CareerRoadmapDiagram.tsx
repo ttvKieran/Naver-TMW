@@ -20,19 +20,19 @@ import {
 
 export type DiagramDetailSelection =
   | {
-      type: 'topic';
-      phaseKey: string;
-      topicIndex: number;
-      source: 'learning_path' | 'goal';
-      title: string;
-      meta: string;
-    }
+    type: 'topic';
+    phaseKey: string;
+    topicIndex: number;
+    source: 'learning_path' | 'goal';
+    title: string;
+    meta: string;
+  }
   | {
-      type: 'milestone';
-      phaseKey: string;
-      milestoneIndex: number;
-      title: string;
-    };
+    type: 'milestone';
+    phaseKey: string;
+    milestoneIndex: number;
+    title: string;
+  };
 
 interface PhaseNodeData {
   phaseKey: string;
@@ -84,26 +84,26 @@ const DETAIL_VERTICAL_PADDING = 80;
 
 function PhaseNode({ data }: NodeProps<PhaseNodeData>) {
   return (
-    <div className="w-72 rounded-3xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+    <div className="w-72 rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       <div
-        className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-white"
+        className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-white"
         style={{ backgroundColor: data.accent }}
       >
         Phase {data.index}
       </div>
       <div className="px-5 py-4 space-y-3">
         <div>
-          <h4 className="text-lg font-semibold text-gray-900 leading-tight">
+          <h4 className="text-lg font-bold text-gray-900 leading-tight tracking-tight">
             {data.title}
           </h4>
-          <p className="text-sm text-gray-500">{data.duration}</p>
+          <p className="text-sm text-gray-500 font-medium">{data.duration}</p>
         </div>
-        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-dashed border-gray-200">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-dashed border-gray-200">
+          <div className="flex items-center gap-4 font-medium">
             <span>{data.goalsCount} goals</span>
             <span>{data.milestonesCount} milestones</span>
           </div>
-          <span className="inline-flex items-center gap-1 font-semibold text-indigo-600">
+          <span className="inline-flex items-center gap-1 font-bold text-indigo-600">
             {data.isExpanded ? (
               <>
                 Collapse
@@ -125,36 +125,36 @@ function PhaseNode({ data }: NodeProps<PhaseNodeData>) {
 function TopicNode({ data }: NodeProps<TopicNodeData>) {
   const badge =
     topicBadgeColors[
-      Math.abs(data.title.length + data.meta.length) % topicBadgeColors.length
+    Math.abs(data.title.length + data.meta.length) % topicBadgeColors.length
     ];
 
   return (
     <div
-      className={`w-64 rounded-2xl border bg-white shadow-md transition-shadow ${
-        data.isActive ? 'border-indigo-300 shadow-xl' : 'border-gray-200'
-      }`}
+      className={`w-64 rounded-xl border bg-white shadow-sm transition-all ${data.isActive ? 'border-indigo-400 shadow-lg ring-2 ring-indigo-100' : 'border-gray-200 hover:border-indigo-200'
+        }`}
     >
       <div className="px-4 py-3 space-y-2">
         <span
-          className="inline-flex text-[11px] font-semibold uppercase tracking-wide text-gray-700 px-2 py-1 rounded-full"
+          className="inline-flex text-[10px] font-bold uppercase tracking-wide text-gray-700 px-2.5 py-1 rounded-full"
           style={{ backgroundColor: badge }}
         >
           {data.meta}
         </span>
-        <p className="text-sm font-semibold text-gray-800 leading-snug break-words">
+        <p className="text-sm font-bold text-gray-800 leading-snug break-words">
           {data.title}
         </p>
         {data.isActive && (
           <div className="pt-3 border-t border-dashed border-gray-200 text-xs text-gray-600 space-y-2 max-h-32 overflow-y-auto">
             {data.resources.length > 0 && (
               <div>
-                <p className="font-semibold text-gray-700 mb-1 text-[11px] uppercase tracking-wide">
+                <p className="font-bold text-gray-700 mb-1 text-[10px] uppercase tracking-wide">
                   Resources
                 </p>
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {data.resources.slice(0, 3).map((resource, idx) => (
-                    <li key={idx} className="text-[11.5px] break-words">
-                      • {resource}
+                    <li key={idx} className="text-[11px] break-words flex items-start gap-1.5">
+                      <span className="text-indigo-400 mt-0.5">•</span>
+                      {resource}
                     </li>
                   ))}
                 </ul>
@@ -173,7 +173,7 @@ function TerminalNode({ data }: NodeProps<TerminalNodeData>) {
   return (
     <div className="flex items-center justify-center">
       <div
-        className="h-20 w-20 rounded-full flex items-center justify-center text-white font-semibold shadow-lg"
+        className="h-20 w-20 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-4 border-white ring-2 ring-gray-100"
         style={{ backgroundColor: color }}
       >
         {data.label}
@@ -186,10 +186,10 @@ function DetailNode({ data }: NodeProps<DetailNodeData>) {
   if (data.variant === 'milestone') {
     return (
       <div className="w-52 rounded-xl border border-amber-300 bg-white shadow-sm px-4 py-3 text-xs text-gray-700">
-        <p className="uppercase text-[10px] text-amber-600 font-semibold tracking-wide">
+        <p className="uppercase text-[10px] text-amber-600 font-bold tracking-wide mb-1">
           Milestone
         </p>
-        <p className="text-sm font-semibold text-gray-900 break-words">
+        <p className="text-sm font-bold text-gray-900 break-words leading-snug">
           {data.label}
         </p>
       </div>
@@ -202,10 +202,10 @@ function DetailNode({ data }: NodeProps<DetailNodeData>) {
       className="w-52 rounded-xl border px-3 py-2 text-xs font-medium text-gray-700 shadow-sm bg-white"
       style={{ borderColor: palette.border, backgroundColor: palette.fill }}
     >
-      <p className="uppercase tracking-wide text-[10px] text-gray-500 mb-1">
+      <p className="uppercase tracking-wide text-[10px] text-gray-500 mb-1 font-bold">
         Project / Practice
       </p>
-      <p className="text-[11px] leading-snug break-words line-clamp-2">
+      <p className="text-[11px] leading-snug break-words line-clamp-2 font-medium">
         {data.label}
       </p>
     </div>

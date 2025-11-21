@@ -113,10 +113,10 @@ export default function ProfileForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
+    <div className="min-h-screen py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
             Hồ Sơ Cá Nhân
           </h1>
           <p className="text-gray-600 mb-8">
@@ -126,10 +126,10 @@ export default function ProfileForm() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Info */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Thông Tin Cơ Bản
               </h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -140,14 +140,14 @@ export default function ProfileForm() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                     placeholder="Nguyễn Văn A"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    GPA (Điểm Trung Bình): {formData.gpa.toFixed(1)}
+                    GPA (Điểm Trung Bình): <span className="text-indigo-600 font-bold">{formData.gpa.toFixed(1)}</span>
                   </label>
                   <input
                     type="range"
@@ -156,7 +156,7 @@ export default function ProfileForm() {
                     step="0.1"
                     value={formData.gpa}
                     onChange={(e) => setFormData(prev => ({ ...prev, gpa: parseFloat(e.target.value) }))}
-                    className="w-full"
+                    className="w-full accent-indigo-600"
                   />
                   <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>0.0</span>
@@ -172,7 +172,7 @@ export default function ProfileForm() {
                   <select
                     value={formData.mbti}
                     onChange={(e) => setFormData(prev => ({ ...prev, mbti: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white"
                   >
                     {mbtiTypes.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -184,31 +184,33 @@ export default function ProfileForm() {
 
             {/* Personality Traits */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Đánh Giá Tính Cách
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-500 mb-4">
                 Đánh giá từ 0 (yếu) đến 10 (xuất sắc)
               </p>
-              
-              <div className="space-y-4">
+
+              <div className="space-y-6">
                 {Object.entries(formData.traits).map(([trait, value]) => (
                   <div key={trait}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-                      {trait === 'analytical' && 'Tư duy phân tích'}
-                      {trait === 'creative' && 'Sáng tạo'}
-                      {trait === 'teamwork' && 'Làm việc nhóm'}
-                      {trait === 'leadership' && 'Lãnh đạo'}
-                      {trait === 'technical' && 'Kỹ thuật'}
-                      {' '}- {value}/10
-                    </label>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700 capitalize">
+                        {trait === 'analytical' && 'Tư duy phân tích'}
+                        {trait === 'creative' && 'Sáng tạo'}
+                        {trait === 'teamwork' && 'Làm việc nhóm'}
+                        {trait === 'leadership' && 'Lãnh đạo'}
+                        {trait === 'technical' && 'Kỹ thuật'}
+                      </label>
+                      <span className="text-sm font-bold text-indigo-600">{value}/10</span>
+                    </div>
                     <input
                       type="range"
                       min="0"
                       max="10"
                       value={value}
                       onChange={(e) => handleTraitChange(trait as keyof PersonalityTraits, parseInt(e.target.value))}
-                      className="w-full"
+                      className="w-full accent-indigo-600"
                     />
                   </div>
                 ))}
@@ -217,31 +219,33 @@ export default function ProfileForm() {
 
             {/* Skills Assessment */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Đánh Giá Kỹ Năng
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-500 mb-4">
                 Đánh giá từ 0 (chưa biết) đến 10 (chuyên gia)
               </p>
-              
-              <div className="space-y-4">
+
+              <div className="space-y-6">
                 {Object.entries(formData.skills).map(([skill, value]) => (
                   <div key={skill}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-                      {skill === 'programming' && 'Lập trình'}
-                      {skill === 'problemSolving' && 'Giải quyết vấn đề'}
-                      {skill === 'communication' && 'Giao tiếp'}
-                      {skill === 'systemDesign' && 'Thiết kế hệ thống'}
-                      {skill === 'dataAnalysis' && 'Phân tích dữ liệu'}
-                      {' '}- {value}/10
-                    </label>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700 capitalize">
+                        {skill === 'programming' && 'Lập trình'}
+                        {skill === 'problemSolving' && 'Giải quyết vấn đề'}
+                        {skill === 'communication' && 'Giao tiếp'}
+                        {skill === 'systemDesign' && 'Thiết kế hệ thống'}
+                        {skill === 'dataAnalysis' && 'Phân tích dữ liệu'}
+                      </label>
+                      <span className="text-sm font-bold text-indigo-600">{value}/10</span>
+                    </div>
                     <input
                       type="range"
                       min="0"
                       max="10"
                       value={value}
                       onChange={(e) => handleSkillChange(skill as keyof Skills, parseInt(e.target.value))}
-                      className="w-full"
+                      className="w-full accent-indigo-600"
                     />
                   </div>
                 ))}
@@ -250,24 +254,23 @@ export default function ProfileForm() {
 
             {/* Interests */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Sở Thích & Lĩnh Vực Quan Tâm
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-500 mb-4">
                 Chọn tất cả các lĩnh vực bạn quan tâm
               </p>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {availableInterests.map(interest => (
                   <button
                     key={interest}
                     type="button"
                     onClick={() => toggleInterest(interest)}
-                    className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                      formData.interests.includes(interest)
-                        ? 'bg-indigo-500 text-white border-indigo-500'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-300'
-                    }`}
+                    className={`px-4 py-3 rounded-xl border transition-all font-medium ${formData.interests.includes(interest)
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform -translate-y-0.5'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+                      }`}
                   >
                     {interest.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   </button>
@@ -280,13 +283,13 @@ export default function ProfileForm() {
               <button
                 type="submit"
                 disabled={isSubmitting || formData.interests.length === 0}
-                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-indigo-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:shadow-indigo-500/30 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5"
               >
                 {isSubmitting ? 'Đang phân tích...' : 'Nhận Tư Vấn Nghề Nghiệp'}
               </button>
-              
+
               {formData.interests.length === 0 && (
-                <p className="text-sm text-red-500 mt-2 text-center">
+                <p className="text-sm text-red-500 mt-2 text-center font-medium">
                   * Vui lòng chọn ít nhất 1 sở thích
                 </p>
               )}

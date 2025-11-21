@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export default async function DashboardPage({
   searchParams,
@@ -8,23 +10,23 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const studentId = params.id || 'STU001';
-  
+
   // Fetch student data from database
   let student: any = null;
   let hotCareers: any[] = [];
   let currentRoadmap: any = null;
   let currentCareerId: string | null = null;
-  
+
   try {
     // Fetch student with populated skills/courses
     const studentRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students?id=${studentId}`, {
       cache: 'no-store'
     });
     const studentData = await studentRes.json();
-    
+
     if (studentData.student) {
       const dbStudent = studentData.student;
-      
+
       // Transform database student to dashboard format
       student = {
         id: dbStudent.studentCode,
@@ -44,7 +46,7 @@ export default async function DashboardPage({
         skills: {} as Record<string, number>,
         interests: dbStudent.interests || [],
       };
-      
+
       // Convert studentSkills array to skills object for chart
       if (dbStudent.studentSkills && dbStudent.studentSkills.length > 0) {
         dbStudent.studentSkills.forEach((skill: any) => {
@@ -62,19 +64,19 @@ export default async function DashboardPage({
         };
       }
     }
-    
+
     // Fetch hot careers
     const careersRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`, {
       cache: 'no-store'
     });
     const careersData = await careersRes.json();
     hotCareers = careersData.careers?.slice(0, 6) || [];
-    
+
     // Find career by title match
     const currentCareer = careersData.careers?.find((c: any) =>
       c.title.toLowerCase() === student?.actualCareer?.toLowerCase()
     );
-    
+
     // Fetch roadmap for current career
     if (currentCareer) {
       currentCareerId = currentCareer._id;
@@ -117,13 +119,24 @@ export default async function DashboardPage({
     };
   }
 
+  let careersFile = await fs.readFile(
+    path.join(process.cwd(), 'data', 'career-roadmaps.json'),
+    'utf8'
+  );
+
+  if (careersFile.charCodeAt(0) === 0xFEFF) {
+    careersFile = careersFile.slice(1);
+  }
+
   const careersData = JSON.parse(careersFile);
 
   // Get all roadmaps (careers)
   const allRoadmaps = careersData.careers;
 
-  // Get hot careers (just top 6 for display)
-  const hotCareers = careersData.careers.slice(0, 6);
+  // Get hot careers (just top 6 for display) if not already fetched
+  if (hotCareers.length === 0) {
+    hotCareers = careersData.careers.slice(0, 6);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">

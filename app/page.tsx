@@ -14,207 +14,114 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold mb-2 text-black">Career Advisor AI</h1>
-          <p className="text-lg text-black">
-            Hệ thống tư vấn nghề nghiệp thông minh với ClovaX API
-          </p>
-          
-          {/* Student Selector */}
-          {students.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-3">Chọn sinh viên:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {students.map((student: any) => (
-                  <a
-                    key={student.studentCode}
-                    href={`/dashboard?id=${student.studentCode}`}
-                    className="p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all"
-                  >
-                    <div className="font-medium text-gray-900">{student.fullName}</div>
-                    <div className="text-sm text-gray-600">{student.studentCode}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      GPA: {student.gpa?.toFixed(1)} | {student.personality?.mbti}
-                    </div>
-                    {student.currentCareer && (
-                      <div className="text-xs text-blue-600 mt-1">{student.currentCareer}</div>
-                    )}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-indigo-100 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Student Career Platform</h1>
+            <p className="text-sm text-indigo-600 font-medium">Powered by Naver ClovaX</p>
+          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        {/* About Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4 text-black">About This Cookbook</h2>
-          <p className="text-black mb-4">
-            This cookbook provides hands-on examples of working with Naver Cloud
-            Platform's ClovaX API. Each example demonstrates different
-            capabilities and use cases with working code you can explore and
-            modify.
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-900">
-              <strong>Note:</strong> You'll need to configure your API keys in{" "}
-              <code className="bg-blue-100 px-2 py-1 rounded">.env.local</code>{" "}
-              before running these examples.
-            </p>
-          </div>
-        </section>
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <h2 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 tracking-tight">
+          Build Your Future with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">AI Guidance</span>
+        </h2>
+        <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+          Discover your perfect career path, get personalized learning roadmaps, and track your progress with our AI-powered student platform.
+        </p>
 
-        {/* Examples Grid */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-6 text-black">Examples</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ExampleCard
-              title="Dashboard NEW"
-              description="Tổng quan về kỹ năng, điểm số, tính cách của sinh viên. Xem biểu đồ radar, kỹ năng, danh sách nghề nghiệp hot và roadmap đang theo đuổi."
-              href="/dashboard"
-              icon={
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              }
-            />
-            
-            <ExampleCard
-              title="Career Advisor"
-              description="AI-powered career counseling system. Input your profile (GPA, personality, skills) and get personalized career recommendations with detailed roadmaps powered by ClovaX."
-              href="/career-advisor"
-              icon={
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              }
-            />
-            
-            <ExampleCard
-              title="News Researcher"
-              description="Demonstrates tool calling (function calling) with ClovaX. The AI uses NewsAPI to search for and summarize recent news articles based on user queries."
-              href="/examples/news-researcher"
-              icon={
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-                  />
-                </svg>
-              }
-            />
+        <div className="flex flex-col sm:flex-row justify-center gap-6">
+          <a href="/dashboard" className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-1">
+            Go to Dashboard
+          </a>
+          <a href="/career-advisor" className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-bold shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all">
+            Start Career Advisor
+          </a>
+        </div>
+      </section>
 
-            <ExampleCard
-              title="Receipt Analyzer"
-              description="Demonstrates ClovaX Vision (HCX-005) for image analysis. Upload receipt images and extract information like items, prices, and totals using multimodal AI."
-              href="/examples/receipt-analyzer"
-              icon={
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+      {/* Student Selector (Dev Mode) */}
+      {students.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 mb-20">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8">
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-6">Select a Student Profile (Dev Mode)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {students.map((student: any) => (
+                <a
+                  key={student.studentCode}
+                  href={`/dashboard?id=${student.studentCode}`}
+                  className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group bg-white"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              }
-            />
-
-            <ExampleCard
-              title="Lesson Plan"
-              description="A comprehensive 90-minute workshop guide for teaching ClovaX API. Includes detailed timeline, teaching tips, and hands-on activities for both examples."
-              href="/lesson-plan"
-              icon={
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              }
-            />
-
-            {/* Placeholder for future examples */}
-            <div className="border rounded-lg p-6 bg-gray-100 border-dashed border-gray-300">
-              <div className="text-black">
-                <h3 className="text-xl font-semibold mb-2">More Examples Coming Soon</h3>
-                <p>Additional examples will be added to showcase more ClovaX capabilities.</p>
-              </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 group-hover:text-indigo-700">{student.fullName}</div>
+                    <div className="text-xs text-gray-500">{student.studentCode}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-gray-900">{student.gpa?.toFixed(1)} GPA</div>
+                    <div className="text-xs text-gray-500">{student.personality?.mbti}</div>
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
         </section>
+      )}
 
-        {/* Resources Section */}
-        <section className="mt-12 border-t pt-12">
-          <h2 className="text-2xl font-semibold mb-4 text-black">Resources</h2>
-          <ul className="space-y-2 text-blue-600">
-            <li>
-              <a
-                href="https://api.ncloud-docs.com/docs/en/clovastudio-chatcompletionsv3"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                ClovaX Chat Completions V3 API Documentation →
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.ncloud.com/product/aiService/clovaStudio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                Naver Cloud Platform - Clova Studio →
-              </a>
-            </li>
-          </ul>
-        </section>
+      {/* Main Features */}
+      <main className="max-w-6xl mx-auto px-4 pb-24">
+        <h3 className="text-2xl font-bold text-gray-900 mb-8">Core Features</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+          <ExampleCard
+            title="Smart Dashboard"
+            description="Your personal command center. View real-time career matches, analyze your skill gaps, and interact with your personalized learning roadmap."
+            href="/dashboard"
+            icon={
+              <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            }
+          />
+
+          <ExampleCard
+            title="AI Career Advisor"
+            description="Not sure what to do? Chat with our AI counselor to discover careers that match your personality and skills, powered by Naver ClovaX."
+            href="/career-advisor"
+            icon={
+              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            }
+          />
+        </div>
+
+        {/* Tech Demos */}
+        <div className="border-t border-indigo-100 pt-16">
+          <h3 className="text-xl font-bold text-gray-400 mb-8 uppercase tracking-wider">Technical Demos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-75 hover:opacity-100 transition-opacity">
+            <ExampleCard
+              title="News Researcher"
+              description="Tool calling demo with NewsAPI."
+              href="/examples/news-researcher"
+              icon={<span className="text-2xl">📰</span>}
+            />
+            <ExampleCard
+              title="Receipt Analyzer"
+              description="Vision AI demo for receipts."
+              href="/examples/receipt-analyzer"
+              icon={<span className="text-2xl">🧾</span>}
+            />
+            <ExampleCard
+              title="Lesson Plan"
+              description="Workshop guide."
+              href="/lesson-plan"
+              icon={<span className="text-2xl">📚</span>}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
