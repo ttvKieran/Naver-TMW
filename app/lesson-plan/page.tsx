@@ -4,262 +4,215 @@ import Link from "next/link";
 
 export default function LessonPlanPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20">
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+      <header className="bg-card border-b border-border/50 sticky top-0 z-10 backdrop-blur-md bg-opacity-80">
+        <div className="max-w-5xl mx-auto px-4 py-6">
           <Link
             href="/"
-            className="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block"
+            className="text-muted-foreground hover:text-primary font-medium mb-4 inline-flex items-center transition-colors"
           >
-            ← Back to Home
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
           </Link>
-          <h1 className="text-4xl font-bold mb-2 text-black">
-            ClovaX API Workshop: 90-Minute Lesson Plan
+          <h1 className="text-4xl font-bold mb-2 text-foreground tracking-tight">
+            ClovaX API Workshop: <span className="text-primary">90-Minute Lesson Plan</span>
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-muted-foreground">
             A comprehensive guide to teaching ClovaX Chat Completions API with hands-on examples
           </p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-12 space-y-8">
         {/* Overview Section */}
-        <section className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 text-black">Workshop Overview</h2>
-          <div className="space-y-4 text-black">
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Learning Objectives</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Understand the fundamentals of ClovaX Chat Completions API</li>
-                <li>Learn to implement tool calling (function calling) with external APIs</li>
-                <li>Master multimodal AI capabilities using ClovaX Vision (HCX-005)</li>
-                <li>Build two complete working applications</li>
-                <li>Apply best practices for API integration and error handling</li>
+        <section className="bg-card border border-border/50 rounded-3xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl">📚</span>
+            Workshop Overview
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-foreground">Learning Objectives</h3>
+              <ul className="space-y-2 text-muted-foreground text-sm">
+                <li className="flex items-start gap-2"><span className="text-primary mt-1">•</span>Understand ClovaX Chat Completions API</li>
+                <li className="flex items-start gap-2"><span className="text-primary mt-1">•</span>Implement tool calling (function calling)</li>
+                <li className="flex items-start gap-2"><span className="text-primary mt-1">•</span>Master multimodal AI with ClovaX Vision</li>
+                <li className="flex items-start gap-2"><span className="text-primary mt-1">•</span>Build two complete working applications</li>
+                <li className="flex items-start gap-2"><span className="text-primary mt-1">•</span>Apply best practices for API integration</li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Prerequisites</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Basic JavaScript/TypeScript knowledge</li>
-                <li>Familiarity with React and Next.js</li>
-                <li>Understanding of REST APIs and async/await</li>
-                <li>Node.js installed on local machine</li>
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-foreground">Prerequisites</h3>
+              <ul className="space-y-2 text-muted-foreground text-sm">
+                <li className="flex items-start gap-2"><span className="text-secondary mt-1">•</span>Basic JavaScript/TypeScript knowledge</li>
+                <li className="flex items-start gap-2"><span className="text-secondary mt-1">•</span>Familiarity with React and Next.js</li>
+                <li className="flex items-start gap-2"><span className="text-secondary mt-1">•</span>Understanding of REST APIs</li>
+                <li className="flex items-start gap-2"><span className="text-secondary mt-1">•</span>Node.js installed locally</li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Required Setup</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Naver Cloud Platform account with ClovaX API access</li>
-                <li>NewsAPI.org API key (free tier)</li>
-                <li>Code editor (VS Code recommended)</li>
-                <li>This repository cloned and dependencies installed</li>
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-foreground">Required Setup</h3>
+              <ul className="space-y-2 text-muted-foreground text-sm">
+                <li className="flex items-start gap-2"><span className="text-orange-500 mt-1">•</span>Naver Cloud Platform account</li>
+                <li className="flex items-start gap-2"><span className="text-orange-500 mt-1">•</span>NewsAPI.org API key (free tier)</li>
+                <li className="flex items-start gap-2"><span className="text-orange-500 mt-1">•</span>VS Code (recommended)</li>
+                <li className="flex items-start gap-2"><span className="text-orange-500 mt-1">•</span>Repository cloned & dependencies installed</li>
               </ul>
             </div>
           </div>
         </section>
 
         {/* Timeline Section */}
-        <section className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 text-black">90-Minute Timeline</h2>
+        <section className="bg-card border border-border/50 rounded-3xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold mb-8 text-foreground flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl">⏱️</span>
+            90-Minute Timeline
+          </h2>
 
-          {/* Part 1 */}
-          <div className="mb-8 pb-8 border-b">
-            <div className="flex items-center mb-4">
-              <div className="bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-lg mr-4">
+          <div className="relative border-l-2 border-border/50 ml-8 space-y-12">
+            {/* Part 1 */}
+            <div className="relative pl-12">
+              <div className="absolute -left-[25px] top-0 bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-600/20">
                 0-15
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-black">Part 1: Introduction & Setup</h3>
-                <p className="text-gray-600">15 minutes</p>
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-foreground">Part 1: Introduction & Setup</h3>
+                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">15 minutes</p>
+              </div>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="bg-background/50 p-4 rounded-2xl border border-border/50">
+                  <h4 className="font-bold text-foreground mb-2 text-sm">5 min: Welcome (Lecture)</h4>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>• Intro to ClovaX & Naver's LLM platform</li>
+                    <li>• HCX-005 (multimodal) vs HCX-007 (thinking)</li>
+                    <li>• Chat Completions API architecture</li>
+                    <li>• Real-world use cases discussion</li>
+                  </ul>
+                </div>
+                <div className="bg-background/50 p-4 rounded-2xl border border-border/50">
+                  <h4 className="font-bold text-foreground mb-2 text-sm">5 min: Setup (Hands-on)</h4>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>• Clone repo & install dependencies</li>
+                    <li>• Configure .env.local with keys</li>
+                    <li>• Start dev server: <code className="bg-muted px-1 py-0.5 rounded text-foreground">npm run dev</code></li>
+                    <li>• Verify homepage loads</li>
+                  </ul>
+                </div>
+                <div className="bg-background/50 p-4 rounded-2xl border border-border/50">
+                  <h4 className="font-bold text-foreground mb-2 text-sm">5 min: Code Tour (Lecture)</h4>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>• Next.js App Router structure</li>
+                    <li>• ClovaXClient class review</li>
+                    <li>• Server Actions vs Client Components</li>
+                    <li>• Type definitions overview</li>
+                  </ul>
+                </div>
               </div>
             </div>
-            <div className="ml-20 space-y-4">
-              <div>
-                <h4 className="font-semibold text-black mb-2">5 min: Welcome & Context (Lecture)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Introduce ClovaX as Naver's LLM platform</li>
-                  <li>Explain available models: HCX-005 (multimodal - vision + text) and HCX-007 (text-only with thinking capabilities)</li>
-                  <li>Overview of Chat Completions API architecture</li>
-                  <li>Discuss real-world use cases</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">5 min: Environment Setup (Hands-on)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Clone repository and install dependencies</li>
-                  <li>Configure .env.local with API keys</li>
-                  <li>Start development server: <code className="bg-gray-100 px-2 py-1 rounded">npm run dev</code></li>
-                  <li>Verify homepage loads successfully</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">5 min: Code Architecture Tour (Lecture)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Explain Next.js App Router structure</li>
-                  <li>Review ClovaXClient class (app/api/clovax/client.ts)</li>
-                  <li>Discuss Server Actions vs Client Components</li>
-                  <li>Show type definitions in lib/types.ts</li>
-                </ul>
-              </div>
-            </div>
-          </div>
 
-          {/* Part 2 */}
-          <div className="mb-8 pb-8 border-b">
-            <div className="flex items-center mb-4">
-              <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-lg mr-4">
+            {/* Part 2 */}
+            <div className="relative pl-12">
+              <div className="absolute -left-[25px] top-0 bg-emerald-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-sm shadow-lg shadow-emerald-600/20">
                 15-50
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-black">Part 2: News Researcher - Tool Calling</h3>
-                <p className="text-gray-600">35 minutes</p>
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-foreground">Part 2: News Researcher - Tool Calling</h3>
+                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">35 minutes</p>
               </div>
-            </div>
-            <div className="ml-20 space-y-4">
-              <div>
-                <h4 className="font-semibold text-black mb-2">10 min: Understanding Tool Calling (Lecture)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>What is tool calling (function calling) and why it matters</li>
-                  <li>How LLMs decide when to call tools</li>
-                  <li>Tool definition schema and parameters</li>
-                  <li>Request/response flow with tool execution</li>
-                  <li>Demo: Show lib/tools.ts - the searchNewsTool definition</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">15 min: Code Walkthrough (Hands-on)</h4>
-                <div className="ml-4 space-y-2 text-black">
-                  <p className="font-medium">Navigate to: app/examples/news-researcher/</p>
-                  <div className="ml-4">
-                    <p className="font-medium mb-1">1. Review actions.ts (10 min):</p>
-                    <ul className="list-disc list-inside ml-4 space-y-1">
-                      <li><strong>executeNewsSearch()</strong>: Integrates with NewsAPI</li>
-                      <li><strong>chatWithNewsResearcher()</strong>: Main orchestration logic</li>
-                      <li>Key pattern: Send messages → Get tool call → Execute function → Return results → Get final response</li>
-                      <li>Error handling and message serialization</li>
-                    </ul>
-                    <p className="font-medium mt-2 mb-1">2. Review page.tsx (5 min):</p>
-                    <ul className="list-disc list-inside ml-4 space-y-1">
-                      <li>Client component using ChatInterface</li>
-                      <li>How Server Actions connect frontend to backend</li>
-                      <li>UI patterns for chat applications</li>
-                    </ul>
+              <div className="space-y-4">
+                <div className="bg-background/50 p-6 rounded-2xl border border-border/50">
+                  <h4 className="font-bold text-foreground mb-4">Key Concepts & Activities</h4>
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h5 className="text-sm font-bold text-primary mb-2">Lecture (10 min)</h5>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• What is tool calling and why it matters</li>
+                        <li>• Tool definition schema and parameters</li>
+                        <li>• Request/response flow with tool execution</li>
+                        <li>• Demo: <code className="text-xs bg-muted px-1 rounded">lib/tools.ts</code> definition</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-bold text-primary mb-2">Hands-on (25 min)</h5>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• Review <code className="text-xs bg-muted px-1 rounded">actions.ts</code>: executeNewsSearch & orchestration</li>
+                        <li>• Review <code className="text-xs bg-muted px-1 rounded">page.tsx</code>: UI & Server Action connection</li>
+                        <li>• Test queries: "Latest AI news", "Climate change"</li>
+                        <li>• Debugging: Watch Server Action logs in terminal</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">10 min: Live Testing & Discussion (Hands-on)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Navigate to /examples/news-researcher</li>
-                  <li>Test with queries: "Latest AI news", "Climate change updates"</li>
-                  <li>Open browser DevTools to watch Server Action logs</li>
-                  <li>Observe tool call execution in real-time</li>
-                  <li>Discuss: When does the AI choose to call the tool vs answering directly?</li>
-                  <li>Q&A: Common pitfalls and debugging tips</li>
-                </ul>
-              </div>
             </div>
-          </div>
 
-          {/* Part 3 */}
-          <div className="mb-8 pb-8 border-b">
-            <div className="flex items-center mb-4">
-              <div className="bg-purple-600 text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-lg mr-4">
+            {/* Part 3 */}
+            <div className="relative pl-12">
+              <div className="absolute -left-[25px] top-0 bg-purple-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-sm shadow-lg shadow-purple-600/20">
                 50-80
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-black">Part 3: Receipt Analyzer - Vision AI</h3>
-                <p className="text-gray-600">30 minutes</p>
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-foreground">Part 3: Receipt Analyzer - Vision AI</h3>
+                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">30 minutes</p>
               </div>
-            </div>
-            <div className="ml-20 space-y-4">
-              <div>
-                <h4 className="font-semibold text-black mb-2">8 min: Multimodal AI Concepts (Lecture)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Introduction to vision-language models</li>
-                  <li>HCX-005: Multimodal model (vision + text) - can process both images and text</li>
-                  <li>HCX-007: Text-only model with extended thinking/reasoning capabilities</li>
-                  <li>Image input formats: URLs vs data URIs (base64)</li>
-                  <li>Message content structure for multimodal requests</li>
-                  <li>Use cases: OCR, image understanding, document analysis</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">12 min: Code Walkthrough (Hands-on)</h4>
-                <div className="ml-4 space-y-2 text-black">
-                  <p className="font-medium">Navigate to: app/examples/receipt-analyzer/</p>
-                  <div className="ml-4">
-                    <p className="font-medium mb-1">1. Review actions.ts (7 min):</p>
-                    <ul className="list-disc list-inside ml-4 space-y-1">
-                      <li><strong>analyzeReceipt()</strong>: Single-call vision analysis</li>
-                      <li>Using HCX-005 model (supports both vision and text)</li>
-                      <li>Message content array with both text and image_url parts</li>
-                      <li>dataUri structure: Must include full data:image/...;base64, prefix</li>
-                      <li>Response parsing: Extract text from content array</li>
-                    </ul>
-                    <p className="font-medium mt-2 mb-1">2. Review page.tsx (5 min):</p>
-                    <ul className="list-disc list-inside ml-4 space-y-1">
-                      <li>File upload handling with FileReader API</li>
-                      <li>Converting images to base64 data URIs</li>
-                      <li>State management for loading and errors</li>
-                      <li>UI layout with image preview and results panel</li>
-                    </ul>
+              <div className="space-y-4">
+                <div className="bg-background/50 p-6 rounded-2xl border border-border/50">
+                  <h4 className="font-bold text-foreground mb-4">Multimodal AI Deep Dive</h4>
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h5 className="text-sm font-bold text-secondary mb-2">Lecture (8 min)</h5>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• Vision-language models intro</li>
+                        <li>• HCX-005 (multimodal) capabilities</li>
+                        <li>• Image input formats: URLs vs base64</li>
+                        <li>• Message content structure for multimodal</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-bold text-secondary mb-2">Hands-on (22 min)</h5>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• Review <code className="text-xs bg-muted px-1 rounded">actions.ts</code>: analyzeReceipt logic</li>
+                        <li>• Review <code className="text-xs bg-muted px-1 rounded">page.tsx</code>: File upload & base64 conversion</li>
+                        <li>• Test with default receipt & student uploads</li>
+                        <li>• Experiment with different document types</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">10 min: Live Testing & Experimentation (Hands-on)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Navigate to /examples/receipt-analyzer</li>
-                  <li>Analyze the default receipt image</li>
-                  <li>Upload student receipts (or other documents)</li>
-                  <li>Compare results quality and accuracy</li>
-                  <li>Experiment: Try other document types (invoices, forms, menus)</li>
-                  <li>Discuss: What types of information does it extract well/poorly?</li>
-                </ul>
-              </div>
             </div>
-          </div>
 
-          {/* Part 4 */}
-          <div>
-            <div className="flex items-center mb-4">
-              <div className="bg-orange-600 text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-lg mr-4">
+            {/* Part 4 */}
+            <div className="relative pl-12">
+              <div className="absolute -left-[25px] top-0 bg-orange-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-sm shadow-lg shadow-orange-600/20">
                 80-90
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-black">Part 4: Wrap-up & Next Steps</h3>
-                <p className="text-gray-600">10 minutes</p>
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-foreground">Part 4: Wrap-up & Next Steps</h3>
+                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">10 minutes</p>
               </div>
-            </div>
-            <div className="ml-20 space-y-4">
-              <div>
-                <h4 className="font-semibold text-black mb-2">5 min: Key Takeaways Review (Discussion)</h4>
-                <ul className="list-disc list-inside space-y-1 text-black ml-4">
-                  <li>Compare and contrast: Tool calling vs single-call vision</li>
-                  <li>Model selection: HCX-005 (multimodal) vs HCX-007 (text with thinking)</li>
-                  <li>Best practices: Error handling, API key security, rate limiting</li>
-                  <li>Production considerations: Costs, latency, scaling</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-black mb-2">5 min: Extension Ideas & Resources (Open-ended)</h4>
-                <div className="ml-4 space-y-2 text-black">
-                  <p className="font-medium">Challenge Students to Build:</p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>Add more tools to News Researcher (weather, stocks, translations)</li>
-                    <li>Create a document comparison tool using vision</li>
-                    <li>Build a customer service chatbot with tool calling</li>
-                    <li>Implement streaming responses for real-time output</li>
-                  </ul>
-                  <p className="font-medium mt-3">Additional Resources:</p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>ClovaX API Documentation</li>
-                    <li>Naver Cloud Platform console</li>
-                    <li>Community forums and support</li>
-                  </ul>
+              <div className="bg-background/50 p-6 rounded-2xl border border-border/50">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="font-bold text-foreground mb-2 text-sm">Review & Discussion</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Tool calling vs Single-call vision comparison</li>
+                      <li>• Model selection strategy (HCX-005 vs 007)</li>
+                      <li>• Production best practices (Security, Rate limits)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground mb-2 text-sm">Challenge Ideas</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Add more tools (Weather, Stocks)</li>
+                      <li>• Build document comparison tool</li>
+                      <li>• Implement streaming responses</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -267,124 +220,79 @@ export default function LessonPlanPage() {
         </section>
 
         {/* Teaching Tips Section */}
-        <section className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 text-blue-900">Teaching Tips</h2>
-          <div className="space-y-4 text-blue-900">
-            <div>
-              <h3 className="font-semibold mb-2">Pacing Strategies</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Keep lectures concise (5-10 min max) before hands-on work</li>
-                <li>Have code pre-loaded in tabs to avoid context switching delays</li>
-                <li>If running behind, shorten Q&A and live testing sections</li>
-                <li>If ahead of schedule, add debugging exercises or edge cases</li>
+        <section className="bg-blue-500/5 border border-blue-500/20 rounded-3xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold mb-6 text-blue-600 flex items-center gap-3">
+            <span className="text-2xl">💡</span> Teaching Tips
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="space-y-3">
+              <h3 className="font-bold text-foreground text-sm uppercase tracking-wider">Pacing</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• Keep lectures concise (5-10 min)</li>
+                <li>• Pre-load code to avoid delays</li>
+                <li>• Adjust Q&A time as needed</li>
+                <li>• Have extra challenges ready</li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold mb-2">Common Student Questions</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li><strong>"Why use Server Actions?"</strong> → Security (API keys), simplified data flow, SSR benefits</li>
-                <li><strong>"Can I use this in production?"</strong> → Yes, but add rate limiting, caching, monitoring</li>
-                <li><strong>"What if the tool call fails?"</strong> → Show error handling in actions.ts:132-142</li>
-                <li><strong>"How much does ClovaX cost?"</strong> → Point to NCP pricing page, discuss token counting</li>
-                <li><strong>"Which model should I use?"</strong> → HCX-005 for vision/multimodal, HCX-007 for complex reasoning with thinking</li>
+            <div className="space-y-3">
+              <h3 className="font-bold text-foreground text-sm uppercase tracking-wider">FAQ Prep</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• <strong>Why Server Actions?</strong> Security & SSR</li>
+                <li>• <strong>Production ready?</strong> Yes, with limits</li>
+                <li>• <strong>Tool call fails?</strong> Check error handling</li>
+                <li>• <strong>Cost?</strong> Check NCP pricing</li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold mb-2">Interactive Elements</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Ask students to predict: "What will the AI do with this query?"</li>
-                <li>Code-along moments: Have students modify tool parameters</li>
-                <li>Pair programming: One drives, one navigates through code</li>
-                <li>Share screen: Show student implementations to the class</li>
+            <div className="space-y-3">
+              <h3 className="font-bold text-foreground text-sm uppercase tracking-wider">Engagement</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• Ask for predictions</li>
+                <li>• Code-along moments</li>
+                <li>• Pair programming</li>
+                <li>• Student demos</li>
               </ul>
             </div>
           </div>
         </section>
 
         {/* Code Reference Section */}
-        <section className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 text-black">Key Code References</h2>
-          <div className="space-y-4 text-black">
+        <section className="bg-card border border-border/50 rounded-3xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-3">
+            <span className="text-2xl">💻</span> Key Code References
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="font-semibold text-lg mb-2">Core Files to Highlight</h3>
-              <div className="bg-gray-50 rounded p-4 space-y-2 text-sm font-mono">
-                <div><strong>app/api/clovax/client.ts</strong> - ClovaX API client wrapper</div>
-                <div><strong>lib/types.ts</strong> - TypeScript type definitions</div>
-                <div><strong>lib/tools.ts</strong> - Tool (function) definitions</div>
-                <div><strong>app/examples/news-researcher/actions.ts:65-181</strong> - Tool calling flow</div>
-                <div><strong>app/examples/receipt-analyzer/actions.ts:9-118</strong> - Vision API usage</div>
-                <div><strong>components/ChatInterface.tsx</strong> - Reusable chat UI</div>
+              <h3 className="font-bold text-lg text-foreground mb-4">Core Files</h3>
+              <div className="bg-muted/50 rounded-xl p-4 space-y-2 text-sm font-mono text-muted-foreground border border-border/50">
+                <div className="flex items-center gap-2"><span className="text-primary">app/api/clovax/client.ts</span> <span className="text-xs opacity-50">- API client</span></div>
+                <div className="flex items-center gap-2"><span className="text-primary">lib/types.ts</span> <span className="text-xs opacity-50">- Type defs</span></div>
+                <div className="flex items-center gap-2"><span className="text-primary">lib/tools.ts</span> <span className="text-xs opacity-50">- Tool defs</span></div>
+                <div className="flex items-center gap-2"><span className="text-primary">actions.ts</span> <span className="text-xs opacity-50">- Server Actions</span></div>
+                <div className="flex items-center gap-2"><span className="text-primary">ChatInterface.tsx</span> <span className="text-xs opacity-50">- UI Component</span></div>
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">Critical Code Patterns</h3>
-              <div className="space-y-3">
+              <h3 className="font-bold text-lg text-foreground mb-4">Critical Patterns</h3>
+              <div className="space-y-4">
                 <div>
-                  <p className="font-medium mb-1">Tool Calling Pattern:</p>
-                  <div className="bg-gray-50 rounded p-3 text-sm">
-                    <code className="block whitespace-pre">
-{`1. Define tool schema with name, description, parameters
-2. Send messages array + tools to API
-3. Check finishReason === "tool_calls"
-4. Execute tool function(s)
-5. Add tool response(s) to messages
-6. Call API again for final response`}
-                    </code>
+                  <p className="font-bold text-xs uppercase tracking-wider text-muted-foreground mb-2">Tool Calling Flow</p>
+                  <div className="bg-muted/50 rounded-xl p-3 text-xs font-mono text-muted-foreground border border-border/50">
+                    1. Define schema<br/>
+                    2. Send msg + tools<br/>
+                    3. Check finishReason<br/>
+                    4. Execute tool<br/>
+                    5. Add result to history<br/>
+                    6. Get final response
                   </div>
                 </div>
                 <div>
-                  <p className="font-medium mb-1">Vision API Pattern:</p>
-                  <div className="bg-gray-50 rounded p-3 text-sm">
-                    <code className="block whitespace-pre">
-{`1. Convert image to base64 data URI
-2. Create content array with text + image_url parts
-3. Use HCX-005 model
-4. Extract text from response content array`}
-                    </code>
+                  <p className="font-bold text-xs uppercase tracking-wider text-muted-foreground mb-2">Vision API Flow</p>
+                  <div className="bg-muted/50 rounded-xl p-3 text-xs font-mono text-muted-foreground border border-border/50">
+                    1. Image to base64<br/>
+                    2. Content array (text + image)<br/>
+                    3. Call HCX-005<br/>
+                    4. Parse response
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Assessment Section */}
-        <section className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 text-black">Assessment & Practice</h2>
-          <div className="space-y-4 text-black">
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Check for Understanding</h3>
-              <div className="ml-4 space-y-2">
-                <p className="font-medium">Ask students to explain:</p>
-                <ul className="list-disc list-inside ml-4 space-y-1">
-                  <li>What happens between tool_calls and the final response?</li>
-                  <li>Why do we need a system message?</li>
-                  <li>What's the difference between HCX-005 and HCX-007?</li>
-                  <li>When would you use HCX-005 vs HCX-007?</li>
-                  <li>How would you add a new tool to News Researcher?</li>
-                </ul>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Hands-on Challenges (Optional Homework)</h3>
-              <div className="space-y-2">
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                  <p className="font-medium text-yellow-900">Beginner: Modify News Researcher</p>
-                  <p className="text-sm text-yellow-800 mt-1">
-                    Change the number of articles returned from 5 to 10. Update the UI to display source logos.
-                  </p>
-                </div>
-                <div className="bg-orange-50 border border-orange-200 rounded p-3">
-                  <p className="font-medium text-orange-900">Intermediate: Add a Second Tool</p>
-                  <p className="text-sm text-orange-800 mt-1">
-                    Create a weather tool that ClovaX can call. Use OpenWeatherMap API or similar.
-                  </p>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded p-3">
-                  <p className="font-medium text-red-900">Advanced: Multi-Image Comparison</p>
-                  <p className="text-sm text-red-800 mt-1">
-                    Extend Receipt Analyzer to accept 2 images and compare them (e.g., find price differences).
-                  </p>
                 </div>
               </div>
             </div>
@@ -392,28 +300,26 @@ export default function LessonPlanPage() {
         </section>
 
         {/* Troubleshooting Section */}
-        <section className="bg-white rounded-lg border p-6">
-          <h2 className="text-2xl font-bold mb-4 text-black">Common Issues & Solutions</h2>
-          <div className="space-y-3 text-black">
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold">Error: "NEWSAPI_KEY environment variable is not set"</p>
-              <p className="text-sm mt-1">Solution: Check .env.local file exists and has correct format. Restart dev server.</p>
+        <section className="bg-card border border-border/50 rounded-3xl p-8 shadow-sm">
+          <h2 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-3">
+            <span className="text-2xl">🔧</span> Troubleshooting
+          </h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
+              <p className="font-bold text-red-600 text-sm">Error: "NEWSAPI_KEY not set"</p>
+              <p className="text-xs text-muted-foreground mt-1">Check .env.local file exists and has correct format. Restart dev server.</p>
             </div>
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold">Error: 401 Unauthorized from ClovaX API</p>
-              <p className="text-sm mt-1">Solution: Verify CLOVAX_API_KEY, CLIENT_ID, and CLIENT_SECRET in .env.local. Check NCP console for correct values.</p>
+            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
+              <p className="font-bold text-red-600 text-sm">Error: 401 Unauthorized</p>
+              <p className="text-xs text-muted-foreground mt-1">Verify CLOVAX_API_KEY, CLIENT_ID, SECRET in .env.local. Check NCP console.</p>
             </div>
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold">Receipt analyzer returns empty response</p>
-              <p className="text-sm mt-1">Solution: Ensure image is not too large (max 4MB). Check that data URI includes full prefix. Verify HCX-005 model access.</p>
+            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
+              <p className="font-bold text-red-600 text-sm">Empty Receipt Response</p>
+              <p className="text-xs text-muted-foreground mt-1">Ensure image &lt; 4MB. Check data URI prefix. Verify HCX-005 access.</p>
             </div>
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold">Tool calling doesn't trigger</p>
-              <p className="text-sm mt-1">Solution: Check tool schema format. Make query more explicit ("search for news about..."). Verify finishReason check logic.</p>
-            </div>
-            <div className="border-l-4 border-yellow-500 pl-4">
-              <p className="font-semibold">Slow responses from API</p>
-              <p className="text-sm mt-1">Note: Vision models are slower than text-only. Set expectations for 5-10 second response times.</p>
+            <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4">
+              <p className="font-bold text-yellow-600 text-sm">Slow Responses</p>
+              <p className="text-xs text-muted-foreground mt-1">Vision models are slower. Expect 5-10s latency.</p>
             </div>
           </div>
         </section>

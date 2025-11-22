@@ -26,14 +26,14 @@ function SkillsChart({ skills }: { skills: Record<string, number> }) {
             {skillsArray.map((skill) => (
                 <div key={skill.name}>
                     <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700 capitalize">
+                        <span className="text-sm font-bold text-foreground capitalize">
                             {skill.name}
                         </span>
-                        <span className="text-sm text-gray-600">{skill.value}/10</span>
+                        <span className="text-sm font-medium text-muted-foreground">{skill.value}/10</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
+                    <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
                         <div
-                            className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2.5 rounded-full transition-all duration-500"
+                            className="bg-gradient-to-r from-primary to-secondary h-2.5 rounded-full transition-all duration-1000 ease-out"
                             style={{ width: `${(skill.value / 10) * 100}%` }}
                         />
                     </div>
@@ -77,28 +77,28 @@ function PersonalityRadar({ traits }: { traits: Record<string, number> }) {
         <div className="flex flex-col items-center">
             <svg width={size} height={size} className="mb-4 overflow-visible">
                 {gridPoints.map((gridPoint, index) => (
-                    <polygon key={index} points={gridPoint} fill="none" stroke="#e5e7eb" strokeWidth="1" />
+                    <polygon key={index} points={gridPoint} fill="none" stroke="var(--border)" strokeWidth="1" />
                 ))}
                 {traitsArray.map((_, index) => {
                     const angle = index * angleStep - Math.PI / 2;
                     const x = center + maxRadius * Math.cos(angle);
                     const y = center + maxRadius * Math.sin(angle);
-                    return <line key={index} x1={center} y1={center} x2={x} y2={y} stroke="#e5e7eb" strokeWidth="1" />;
+                    return <line key={index} x1={center} y1={center} x2={x} y2={y} stroke="var(--border)" strokeWidth="1" />;
                 })}
-                <polygon points={points} fill="rgba(79, 70, 229, 0.2)" stroke="#4f46e5" strokeWidth="2" />
+                <polygon points={points} fill="var(--primary)" fillOpacity="0.1" stroke="var(--primary)" strokeWidth="2" />
                 {traitsArray.map((trait, index) => {
                     const angle = index * angleStep - Math.PI / 2;
                     const radius = (trait.value / 10) * maxRadius;
                     const x = center + radius * Math.cos(angle);
                     const y = center + radius * Math.sin(angle);
-                    return <circle key={index} cx={x} cy={y} r="4" fill="#4f46e5" />;
+                    return <circle key={index} cx={x} cy={y} r="4" fill="var(--primary)" />;
                 })}
             </svg>
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                 {traitsArray.map((trait) => (
                     <div key={trait.name} className="flex justify-between items-center min-w-[100px]">
-                        <span className="text-gray-600">{trait.name}</span>
-                        <span className="font-semibold text-indigo-600 ml-2">{trait.value}</span>
+                        <span className="text-muted-foreground">{trait.name}</span>
+                        <span className="font-bold text-primary ml-2">{trait.value}</span>
                     </div>
                 ))}
             </div>
@@ -157,16 +157,16 @@ export default function StudentDashboard({
             )}
 
             {/* Header Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl opacity-60 -mr-16 -mt-16"></div>
+            <div className="bg-card rounded-3xl shadow-sm border border-border p-8 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-3xl opacity-60 -mr-20 -mt-20 group-hover:opacity-80 transition-opacity duration-500"></div>
 
                 <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-4 mb-2">
-                            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">{student.name}</h2>
+                            <h2 className="text-4xl font-bold text-foreground tracking-tight">{student.name}</h2>
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="p-2 text-gray-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-indigo-50"
+                                className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-full hover:bg-primary/5"
                                 title="Edit Profile"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,27 +174,27 @@ export default function StudentDashboard({
                                 </svg>
                             </button>
                         </div>
-                        <p className="text-gray-500 font-medium">ID: {student.id}</p>
+                        <p className="text-muted-foreground font-medium font-mono text-sm">ID: {student.id}</p>
 
                         <div className="flex flex-wrap gap-3 mt-4">
-                            <span className="px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold border border-indigo-100">
+                            <span className="px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-bold border border-primary/20">
                                 MBTI: {student.personality.mbti}
                             </span>
-                            <span className="px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold border border-emerald-100">
+                            <span className="px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold border border-secondary/20">
                                 Target: {student.actualCareer}
                             </span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-8 bg-gray-50/50 px-8 py-4 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-8 bg-muted/50 px-8 py-6 rounded-2xl border border-border backdrop-blur-sm">
                         <div className="text-center">
-                            <div className="text-sm text-gray-500 font-medium mb-1">GPA</div>
-                            <div className="text-4xl font-bold text-indigo-600">{student.gpa.toFixed(1)}</div>
+                            <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">GPA</div>
+                            <div className="text-4xl font-bold text-primary">{student.gpa.toFixed(1)}</div>
                         </div>
-                        <div className="w-px h-12 bg-gray-200"></div>
+                        <div className="w-px h-12 bg-border"></div>
                         <div className="text-center">
-                            <div className="text-sm text-gray-500 font-medium mb-1">Skills Avg</div>
-                            <div className="text-4xl font-bold text-purple-600">
+                            <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Skills Avg</div>
+                            <div className="text-4xl font-bold text-secondary">
                                 {(Object.values(student.skills).reduce((a: any, b: any) => a + b, 0) as number / 5).toFixed(1)}
                             </div>
                         </div>
@@ -205,21 +205,21 @@ export default function StudentDashboard({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Left Column: Stats */}
                 <div className="lg:col-span-4 space-y-8">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">Skill Set</h3>
+                    <div className="bg-card rounded-3xl shadow-sm border border-border p-6 hover:border-primary/20 transition-colors">
+                        <h3 className="text-xl font-bold text-foreground mb-6">Skill Set</h3>
                         <SkillsChart skills={student.skills} />
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">Personality Profile</h3>
+                    <div className="bg-card rounded-3xl shadow-sm border border-border p-6 hover:border-primary/20 transition-colors">
+                        <h3 className="text-xl font-bold text-foreground mb-6">Personality Profile</h3>
                         <PersonalityRadar traits={student.personality.traits} />
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">Interests</h3>
+                    <div className="bg-card rounded-3xl shadow-sm border border-border p-6 hover:border-primary/20 transition-colors">
+                        <h3 className="text-xl font-bold text-foreground mb-4">Interests</h3>
                         <div className="flex flex-wrap gap-2">
                             {student.interests.map((interest: string) => (
-                                <span key={interest} className="px-3 py-1.5 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium border border-gray-100 hover:bg-gray-100 transition-colors">
+                                <span key={interest} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-sm font-medium border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all cursor-default">
                                     {interest}
                                 </span>
                             ))}
@@ -230,13 +230,13 @@ export default function StudentDashboard({
                 {/* Right Column: Career & Roadmap */}
                 <div className="lg:col-span-8 space-y-8">
                     {/* AI Career Predictions */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-indigo-100 p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl opacity-50 -mr-8 -mt-8"></div>
+                    <div className="bg-card rounded-3xl shadow-sm border border-border p-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl opacity-50 -mr-8 -mt-8"></div>
                         <div className="flex items-center justify-between mb-6 relative">
-                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 <span className="text-2xl">✨</span> AI Career Matches
                             </h3>
-                            <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                            <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
                                 Based on your profile
                             </span>
                         </div>
@@ -246,21 +246,21 @@ export default function StudentDashboard({
                                 <button
                                     key={pred.career}
                                     onClick={() => setSelectedCareerId(pred.career)}
-                                    className={`text-left p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${selectedCareerId === pred.career
-                                        ? 'border-indigo-500 bg-indigo-50/50 ring-1 ring-indigo-500'
-                                        : 'border-gray-200 hover:border-indigo-300 bg-white'
+                                    className={`text-left p-5 rounded-2xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${selectedCareerId === pred.career
+                                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                        : 'border-border hover:border-primary/50 bg-card'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <h4 className="font-bold text-gray-900">{pred.career}</h4>
-                                        <span className={`text-sm font-bold px-2 py-0.5 rounded ${pred.matchScore >= 0.8 ? 'bg-emerald-100 text-emerald-700' :
+                                        <h4 className="font-bold text-foreground">{pred.career}</h4>
+                                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${pred.matchScore >= 0.8 ? 'bg-green-100 text-green-700' :
                                             pred.matchScore >= 0.6 ? 'bg-yellow-100 text-yellow-700' :
                                                 'bg-red-100 text-red-700'
                                             }`}>
                                             {Math.round(pred.matchScore * 100)}% Match
                                         </span>
                                     </div>
-                                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2 leading-relaxed">
                                         {pred.reasons[0]}
                                     </p>
                                 </button>
@@ -269,11 +269,11 @@ export default function StudentDashboard({
                     </div>
 
                     {/* Interactive Roadmap */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 min-h-[500px]">
+                    <div className="bg-card rounded-3xl shadow-sm border border-border p-6 min-h-[500px]">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-gray-900">Learning Roadmap</h3>
+                            <h3 className="text-xl font-bold text-foreground">Learning Roadmap</h3>
                             {currentRoadmap && (
-                                <span className="text-sm font-medium text-gray-500">
+                                <span className="text-sm font-bold text-primary bg-primary/5 px-3 py-1 rounded-lg">
                                     {currentRoadmap.title}
                                 </span>
                             )}

@@ -55,15 +55,15 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+        <div className="bg-card rounded-3xl shadow-sm border border-border p-8 mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
             Kết Quả Phân Tích Nghề Nghiệp
           </h1>
-          <p className="text-gray-600">
-            Xin chào <span className="font-semibold text-indigo-600">{profileData.name}</span>!
+          <p className="text-muted-foreground">
+            Xin chào <span className="font-bold text-primary">{profileData.name}</span>!
             Đây là các nghề nghiệp phù hợp nhất với bạn.
           </p>
         </div>
@@ -73,122 +73,92 @@ export default function ResultsPage() {
           {predictions.slice(0, 3).map((prediction, idx) => (
             <div
               key={prediction.career}
-              className={`bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all cursor-pointer border relative overflow-hidden group ${idx === 0 ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200'
+              className={`bg-card rounded-3xl shadow-sm p-6 hover:shadow-lg transition-all cursor-pointer border relative overflow-hidden group ${idx === 0 ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'
                 }`}
               onClick={() => handleSelectCareer(prediction.career)}
             >
               {idx === 0 && (
-                <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
+                <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
                   PHÙ HỢP NHẤT
                 </div>
               )}
 
-              <h3 className="text-xl font-bold text-gray-900 mb-4 mt-2 group-hover:text-indigo-600 transition-colors">
+              <h3 className="text-xl font-bold text-foreground mb-4 mt-2 group-hover:text-primary transition-colors">
                 {prediction.career}
               </h3>
 
               {/* Match Score */}
               <div className="mb-6">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600 font-medium">Độ phù hợp</span>
-                  <span className="font-bold text-indigo-600">
+                  <span className="text-muted-foreground font-medium">Độ phù hợp</span>
+                  <span className="font-bold text-primary">
                     {(prediction.matchScore * 100).toFixed(0)}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2.5 rounded-full transition-all duration-1000"
+                    className="bg-gradient-to-r from-primary to-secondary h-2.5 rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${prediction.matchScore * 100}%` }}
                   />
                 </div>
               </div>
 
               {/* Reasons */}
-              <div className="mb-4">
-                <p className="text-sm font-bold text-emerald-700 mb-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Lý do phù hợp
-                </p>
-                <ul className="text-sm text-gray-600 space-y-2 pl-2">
-                  {prediction.reasons.slice(0, 2).map((reason, i) => (
-                    <li key={i} className="leading-relaxed text-xs">• {reason}</li>
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">Tại sao phù hợp?</h4>
+                <ul className="space-y-2">
+                  {prediction.reasons.slice(0, 3).map((reason, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="line-clamp-2">{reason}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Challenges */}
-              {prediction.challenges.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm font-bold text-orange-700 mb-2 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                    Lưu ý
-                  </p>
-                  <ul className="text-sm text-gray-600 space-y-2 pl-2">
-                    {prediction.challenges.slice(0, 1).map((challenge, i) => (
-                      <li key={i} className="leading-relaxed text-xs">• {challenge}</li>
-                    ))}
-                  </ul>
+              <div className="mt-6 pt-4 border-t border-border flex justify-between items-center">
+                <span className="text-xs font-medium text-muted-foreground">Xem lộ trình chi tiết</span>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
                 </div>
-              )}
-
-              <button className="w-full bg-white text-indigo-600 border border-indigo-200 py-3 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 transition-all text-sm font-bold shadow-sm group-hover:shadow-md">
-                Xem Roadmap Chi Tiết →
-              </button>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* AI Advice from ClovaX */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl opacity-60 -mr-16 -mt-16"></div>
-
-          <div className="flex items-center gap-4 mb-8 relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform rotate-3">
-              <span className="text-white text-2xl">💡</span>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Tư Vấn Từ AI Advisor
-              </h2>
-              <p className="text-sm text-indigo-600 font-medium">Powered by Naver ClovaX</p>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-100 border-t-indigo-600 mb-4"></div>
-              <span className="text-gray-600 font-medium animate-pulse">Đang phân tích với ClovaX AI...</span>
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 border border-red-100 rounded-xl p-6">
-              <p className="text-red-700 font-medium">{error}</p>
-              <p className="text-sm text-red-600 mt-2">
-                Bạn vẫn có thể xem dự đoán và roadmap bên trên.
-              </p>
-            </div>
-          ) : (
-            <div className="prose prose-indigo max-w-none">
-              <div className="whitespace-pre-wrap text-gray-700 leading-relaxed bg-gray-50/50 p-6 rounded-xl border border-gray-100">
-                {aiAdvice}
+        {/* AI Advice */}
+        <div className="bg-card rounded-3xl shadow-sm border border-border p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-3xl opacity-50 -mr-16 -mt-16"></div>
+          
+          <div className="relative">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              </span>
+              Lời Khuyên Từ AI
+            </h2>
+            
+            {isLoading ? (
+              <div className="flex items-center gap-3 text-muted-foreground animate-pulse">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                Đang tạo lời khuyên chi tiết...
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <div className="mt-8 flex gap-4">
-          <button
-            onClick={() => router.push('/career-advisor')}
-            className="flex-1 bg-white text-gray-700 border border-gray-200 py-4 px-6 rounded-xl font-bold shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all"
-          >
-            ← Quay lại
-          </button>
-          <button
-            onClick={() => handleSelectCareer(predictions[0].career)}
-            className="flex-1 bg-indigo-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5"
-          >
-            Xem Roadmap cho {predictions[0].career} →
-          </button>
+            ) : error ? (
+              <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100">
+                {error}
+              </div>
+            ) : (
+              <div className="prose prose-lg max-w-none text-muted-foreground">
+                <div className="whitespace-pre-wrap leading-relaxed bg-muted/30 p-6 rounded-2xl border border-border">
+                  {aiAdvice}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

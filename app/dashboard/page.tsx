@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 export default async function DashboardPage({
   searchParams,
@@ -14,8 +12,7 @@ export default async function DashboardPage({
   // Fetch student data from database
   let student: any = null;
   let hotCareers: any[] = [];
-  let currentRoadmap: any = null;
-  let currentCareerId: string | null = null;
+  let allRoadmaps: any[] = [];
 
   try {
     // Fetch student with populated skills/courses
@@ -65,31 +62,17 @@ export default async function DashboardPage({
       }
     }
 
-    // Fetch hot careers
+    // Fetch careers (which serve as roadmaps source in this context)
     const careersRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`, {
       cache: 'no-store'
     });
     const careersData = await careersRes.json();
-    hotCareers = careersData.careers?.slice(0, 6) || [];
-
-    // Find career by title match
-    const currentCareer = careersData.careers?.find((c: any) =>
-      c.title.toLowerCase() === student?.actualCareer?.toLowerCase()
-    );
-
-    // Fetch roadmap for current career
-    if (currentCareer) {
-      currentCareerId = currentCareer._id;
-      try {
-        const roadmapRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/roadmaps?careerId=${currentCareer._id}`, {
-          cache: 'no-store'
-        });
-        const roadmapData = await roadmapRes.json();
-        currentRoadmap = roadmapData.roadmap;
-      } catch (err) {
-        console.error('Roadmap not found:', err);
-      }
+    
+    if (careersData.careers) {
+        hotCareers = careersData.careers.slice(0, 6);
+        allRoadmaps = careersData.careers;
     }
+
   } catch (error) {
     console.error('Error loading dashboard data:', error);
     // Fallback to hardcoded data
@@ -101,73 +84,56 @@ export default async function DashboardPage({
       personality: {
         mbti: "ISTJ",
         traits: {
-          analytical: 9,
+          analytical: 8,
           creative: 4,
-          teamwork: 5,
-          leadership: 6,
-          technical: 9
+          teamwork: 6,
+          leadership: 5,
+          technical: 9,
         }
       },
       skills: {
-        programming: 7,
+        programming: 8,
         problemSolving: 7,
         communication: 6,
-        systemDesign: 8,
-        dataAnalysis: 5
+        systemDesign: 5,
+        dataAnalysis: 7,
       },
-      interests: ["data-science", "coding", "automation", "cloud"]
+      interests: ["coding", "backend", "databases"],
     };
   }
 
-  let careersFile = await fs.readFile(
-    path.join(process.cwd(), 'data', 'career-roadmaps.json'),
-    'utf8'
-  );
-
-  if (careersFile.charCodeAt(0) === 0xFEFF) {
-    careersFile = careersFile.slice(1);
-  }
-
-  const careersData = JSON.parse(careersFile);
-
-  // Get all roadmaps (careers)
-  const allRoadmaps = careersData.careers;
-
-  // Get hot careers (just top 6 for display) if not already fetched
-  if (hotCareers.length === 0) {
-    hotCareers = careersData.careers.slice(0, 6);
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Dashboard Sinh Viên
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Tổng quan về kỹ năng, điểm số và lộ trình nghề nghiệp
-              </p>
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+              <span className="text-white font-bold text-xl">C</span>
             </div>
-            <Link
-              href="/"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              ← Về trang chủ
-            </Link>
+            <div>
+              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none group-hover:text-primary transition-colors">Career Platform</h1>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Dashboard</p>
+            </div>
+          </Link>
+          
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg border border-border">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-xs font-medium text-muted-foreground">System Online</span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm border border-primary/20">
+              {student?.name?.charAt(0) || 'U'}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <StudentDashboard
+        <StudentDashboard 
           initialStudent={student}
           hotCareers={hotCareers}
-          allRoadmaps={allRoadmaps}
+          allRoadmaps={allRoadmaps} 
         />
       </main>
     </div>

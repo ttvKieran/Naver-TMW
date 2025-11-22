@@ -1,68 +1,188 @@
 import ExampleCard from "@/components/ExampleCard";
+import connectDB from '@/lib/mongodb/connection';
+import { Student } from '@/lib/mongodb/models';
 
 export default async function Home() {
   // Fetch students from database for selection
   let students = [];
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students`, {
-      cache: 'no-store'
-    });
-    const data = await response.json();
-    students = data.students || [];
+    await connectDB();
+    const studentsData = await Student.find({})
+      .select('studentCode fullName gpa personality.mbti currentCareer')
+      .lean();
+    students = JSON.parse(JSON.stringify(studentsData));
   } catch (error) {
     console.error('Error loading students:', error);
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col overflow-hidden bg-background selection:bg-primary/20">
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.6]"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/10 blur-[120px] rounded-full mix-blend-multiply"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-500/5 blur-[100px] rounded-full mix-blend-multiply"></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-indigo-100 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Student Career Platform</h1>
-            <p className="text-sm text-indigo-600 font-medium">Powered by Naver ClovaX</p>
+      <header className="bg-card/70 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50 supports-[backdrop-filter]:bg-card/60">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+              <span className="text-white font-bold text-xl">C</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none">Career Platform</h1>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Powered by Naver ClovaX</p>
+            </div>
+          </div>
+          <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
+            <a href="#" className="hover:text-primary transition-colors">Features</a>
+            <a href="#" className="hover:text-primary transition-colors">About</a>
+            <a href="#" className="hover:text-primary transition-colors">Contact</a>
+          </nav>
+          <div className="flex gap-3">
+             <a href="/dashboard" className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg shadow-md shadow-primary/20 hover:bg-primary/90 transition-all">
+                Launch App
+             </a>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 tracking-tight">
-          Build Your Future with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">AI Guidance</span>
-        </h2>
-        <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Discover your perfect career path, get personalized learning roadmaps, and track your progress with our AI-powered student platform.
-        </p>
+      <section className="relative z-10 pt-20 pb-32 px-6">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          
+          {/* Left Column: Text */}
+          <div className="text-left space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-primary/10 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <span className="text-xs font-bold text-primary tracking-wide uppercase">AI-Powered Career Guidance</span>
+            </div>
+            
+            <h2 className="text-6xl md:text-8xl font-bold text-foreground tracking-tighter leading-[0.9]">
+              Design Your <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-600 to-primary bg-[length:200%_auto] animate-gradient">Future Career</span>
+            </h2>
+            
+            <p className="text-xl text-muted-foreground max-w-xl leading-relaxed border-l-4 border-primary/20 pl-6">
+              Discover your perfect career path, get personalized learning roadmaps, and track your progress with our intelligent student platform.
+            </p>
 
-        <div className="flex flex-col sm:flex-row justify-center gap-6">
-          <a href="/dashboard" className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-1">
-            Go to Dashboard
-          </a>
-          <a href="/career-advisor" className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-bold shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all">
-            Start Career Advisor
-          </a>
+            <div className="flex flex-wrap gap-4 pt-4">
+              <a href="/dashboard" className="px-8 py-4 bg-foreground text-background rounded-2xl font-bold shadow-xl hover:scale-105 transition-transform duration-300 flex items-center gap-2">
+                Go to Dashboard
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
+              <a href="/career-advisor" className="px-8 py-4 bg-card text-foreground border border-border rounded-2xl font-bold hover:bg-muted/50 transition-all flex items-center gap-2">
+                Talk to Advisor
+              </a>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-muted-foreground pt-8">
+              <div className="flex -space-x-2">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-bold">
+                    {String.fromCharCode(64+i)}
+                  </div>
+                ))}
+              </div>
+              <p>Join <span className="font-bold text-foreground">1,000+</span> students planning their future</p>
+            </div>
+          </div>
+
+          {/* Right Column: 3D Visual */}
+          <div className="relative perspective-1000 h-[600px] hidden lg:block">
+            <div className="relative w-full h-full rotate-3d">
+              {/* Main Dashboard Card */}
+              <div className="absolute inset-0 bg-card/80 backdrop-blur-xl rounded-3xl border border-border/40 shadow-2xl shadow-primary/10 p-6 flex flex-col gap-4 overflow-hidden">
+                {/* Mock Header */}
+                <div className="flex justify-between items-center border-b border-border/50 pb-4">
+                   <div className="w-32 h-4 bg-muted rounded-full"></div>
+                   <div className="flex gap-2">
+                      <div className="w-8 h-8 rounded-full bg-muted"></div>
+                      <div className="w-8 h-8 rounded-full bg-primary/10"></div>
+                   </div>
+                </div>
+                {/* Mock Content Grid */}
+                <div className="grid grid-cols-3 gap-4 h-full">
+                   <div className="col-span-1 bg-muted/50 rounded-2xl p-4 space-y-3">
+                      <div className="w-full h-20 bg-card rounded-xl shadow-sm"></div>
+                      <div className="w-full h-20 bg-card rounded-xl shadow-sm"></div>
+                      <div className="w-full h-20 bg-card rounded-xl shadow-sm"></div>
+                   </div>
+                   <div className="col-span-2 space-y-4">
+                      <div className="w-full h-40 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-2xl border border-primary/10 p-4">
+                         <div className="w-1/2 h-6 bg-primary/10 rounded-lg mb-2"></div>
+                         <div className="w-full h-24 bg-card/50 rounded-xl"></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="h-32 bg-muted/50 rounded-2xl"></div>
+                         <div className="h-32 bg-muted/50 rounded-2xl"></div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+              {/* Floating Elements */}
+              <div className="absolute -right-12 top-20 bg-card p-4 rounded-2xl shadow-xl border border-border floating-card w-48">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Match Score</div>
+                    <div className="text-lg font-bold text-foreground">98%</div>
+                  </div>
+                </div>
+                <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-green-500 h-full w-[98%]"></div>
+                </div>
+              </div>
+
+              <div className="absolute -left-8 bottom-32 bg-card p-4 rounded-2xl shadow-xl border border-border floating-card-delayed w-56">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">AI</div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Career Advisor</div>
+                    <div className="text-sm font-bold text-foreground">"Try Software Eng..."</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Student Selector (Dev Mode) */}
       {students.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 mb-20">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-6">Select a Student Profile (Dev Mode)</h3>
+        <section className="max-w-7xl mx-auto px-6 mb-24 relative z-10">
+          <div className="bg-card/50 backdrop-blur-md rounded-3xl border border-border/60 p-8 md:p-10 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Select Profile (Dev Mode)</h3>
+              <span className="px-2 py-1 bg-card rounded text-xs font-mono text-muted-foreground border border-border">{students.length} Students</span>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {students.map((student: any) => (
                 <a
                   key={student.studentCode}
                   href={`/dashboard?id=${student.studentCode}`}
-                  className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group bg-white"
+                  className="group flex items-center justify-between p-5 rounded-2xl border border-border/60 bg-card/60 hover:bg-card hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300"
                 >
                   <div>
-                    <div className="font-semibold text-gray-900 group-hover:text-indigo-700">{student.fullName}</div>
-                    <div className="text-xs text-gray-500">{student.studentCode}</div>
+                    <div className="font-bold text-foreground group-hover:text-primary transition-colors">{student.fullName}</div>
+                    <div className="text-xs text-muted-foreground mt-1 font-mono">{student.studentCode}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-medium text-gray-900">{student.gpa?.toFixed(1)} GPA</div>
-                    <div className="text-xs text-gray-500">{student.personality?.mbti}</div>
+                    <div className="text-sm font-bold text-foreground">{student.gpa?.toFixed(1)} <span className="text-xs text-muted-foreground font-normal">GPA</span></div>
+                    <div className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground mt-1 inline-block group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      {student.personality?.mbti}
+                    </div>
                   </div>
                 </a>
               ))}
@@ -71,58 +191,103 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Main Features */}
-      <main className="max-w-6xl mx-auto px-4 pb-24">
-        <h3 className="text-2xl font-bold text-gray-900 mb-8">Core Features</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
-          <ExampleCard
-            title="Smart Dashboard"
-            description="Your personal command center. View real-time career matches, analyze your skill gaps, and interact with your personalized learning roadmap."
-            href="/dashboard"
-            icon={
-              <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            }
-          />
-
-          <ExampleCard
-            title="AI Career Advisor"
-            description="Not sure what to do? Chat with our AI counselor to discover careers that match your personality and skills, powered by Naver ClovaX."
-            href="/career-advisor"
-            icon={
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            }
-          />
+      {/* Main Features - Bento Grid Style */}
+      <main className="max-w-7xl mx-auto px-6 pb-32 relative z-10">
+        <div className="mb-16 text-center max-w-2xl mx-auto">
+          <h3 className="text-4xl font-bold text-foreground tracking-tight mb-4">Everything you need to <br/>master your future</h3>
+          <p className="text-muted-foreground text-lg">Our platform combines AI analysis with proven educational frameworks to guide you.</p>
         </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]">
+          {/* Large Card */}
+          <div className="md:col-span-2 row-span-1 relative group overflow-hidden rounded-3xl border border-border bg-card p-8 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-primary/10"></div>
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 012 2h2a2 2 0 012-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                </div>
+                <h3 className="text-2xl font-bold mb-2 text-foreground">Smart Dashboard</h3>
+                <p className="text-muted-foreground max-w-md">Your personal command center. View real-time career matches, analyze your skill gaps, and interact with your personalized learning roadmap.</p>
+              </div>
+              <a href="/dashboard" className="inline-flex items-center text-primary font-semibold group-hover:translate-x-2 transition-transform">
+                Explore Dashboard <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
+            </div>
+            {/* Decorative UI Element */}
+            <div className="absolute bottom-0 right-0 w-1/2 h-3/4 bg-muted/50 rounded-tl-3xl border-t border-l border-border p-4 transform translate-y-4 translate-x-4 group-hover:translate-y-2 group-hover:translate-x-2 transition-transform duration-500">
+               <div className="w-full h-full bg-card rounded-xl shadow-sm p-4">
+                  <div className="flex gap-2 mb-4">
+                     <div className="w-8 h-8 rounded-full bg-muted"></div>
+                     <div className="space-y-1">
+                        <div className="w-20 h-2 bg-muted rounded"></div>
+                        <div className="w-12 h-2 bg-muted/50 rounded"></div>
+                     </div>
+                  </div>
+                  <div className="space-y-2">
+                     <div className="w-full h-2 bg-muted/50 rounded"></div>
+                     <div className="w-full h-2 bg-muted/50 rounded"></div>
+                     <div className="w-2/3 h-2 bg-muted/50 rounded"></div>
+                  </div>
+               </div>
+            </div>
+          </div>
 
-        {/* Tech Demos */}
-        <div className="border-t border-indigo-100 pt-16">
-          <h3 className="text-xl font-bold text-gray-400 mb-8 uppercase tracking-wider">Technical Demos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-75 hover:opacity-100 transition-opacity">
-            <ExampleCard
-              title="News Researcher"
-              description="Tool calling demo with NewsAPI."
-              href="/examples/news-researcher"
-              icon={<span className="text-2xl">📰</span>}
-            />
-            <ExampleCard
-              title="Receipt Analyzer"
-              description="Vision AI demo for receipts."
-              href="/examples/receipt-analyzer"
-              icon={<span className="text-2xl">🧾</span>}
-            />
-            <ExampleCard
-              title="Lesson Plan"
-              description="Workshop guide."
-              href="/lesson-plan"
-              icon={<span className="text-2xl">📚</span>}
-            />
+          {/* Tall Card */}
+          <div className="md:col-span-1 row-span-1 relative group overflow-hidden rounded-3xl border border-border bg-card p-8 hover:shadow-2xl hover:shadow-purple-500/5 transition-all duration-500">
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-purple-500/5 to-transparent opacity-50"></div>
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 mb-6">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+              </div>
+              <h3 className="text-2xl font-bold mb-2 text-foreground">AI Advisor</h3>
+              <p className="text-muted-foreground text-sm mb-6">Chat with our AI counselor to discover careers that match your personality.</p>
+              <a href="/career-advisor" className="w-full py-3 rounded-xl bg-background border border-border text-center block font-semibold hover:bg-muted transition-colors text-foreground">Start Chat</a>
+            </div>
           </div>
         </div>
       </main>
+
+      {/* Examples Section */}
+      <section className="py-24 px-6 bg-card/30 border-t border-border/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Explore Capabilities</h2>
+              <p className="text-muted-foreground">See what our AI models can do for you</p>
+            </div>
+            <a href="/examples" className="text-primary font-bold hover:underline">View all examples →</a>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <ExampleCard
+              title="News Researcher"
+              description="AI agent that researches latest tech news and summarizes key trends for your career."
+              href="/examples/news-researcher"
+              icon="📰"
+              tags={["ClovaX", "Search", "Summary"]}
+            />
+            <ExampleCard
+              title="Receipt Analyzer"
+              description="Extract expense data from receipts to help manage your learning budget."
+              href="/examples/receipt-analyzer"
+              icon="🧾"
+              tags={["Vision", "OCR", "Finance"]}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-card border-t border-border py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">C</div>
+            <span className="font-bold text-foreground">Career Platform</span>
+          </div>
+          <p className="text-sm text-muted-foreground">© 2024 Career Platform. Powered by Naver ClovaX.</p>
+        </div>
+      </footer>
     </div>
   );
 }

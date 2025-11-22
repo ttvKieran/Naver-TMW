@@ -17,21 +17,21 @@ import 'reactflow/dist/style.css';
 // Custom Node Component
 const RoadmapNode = ({ data }: { data: any }) => {
     return (
-        <div className={`px-4 py-3 shadow-lg rounded-2xl border-2 min-w-[200px] bg-white transition-all ${data.isTarget ? 'border-indigo-500 shadow-indigo-100 ring-2 ring-indigo-50' : 'border-gray-200'
+        <div className={`px-4 py-3 shadow-lg rounded-2xl border-2 min-w-[200px] bg-card transition-all ${data.isTarget ? 'border-primary shadow-primary/20 ring-2 ring-primary/10' : 'border-border'
             }`}>
-            <Handle type="target" position={Position.Left} className="!bg-gray-400" />
+            <Handle type="target" position={Position.Left} className="!bg-muted-foreground" />
 
             <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${data.phase === 'phase1' ? 'bg-emerald-100 text-emerald-700' :
-                        data.phase === 'phase2' ? 'bg-indigo-100 text-indigo-700' :
-                            'bg-purple-100 text-purple-700'
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${data.phase === 'phase1' ? 'bg-green-100 text-green-700' :
+                        data.phase === 'phase2' ? 'bg-primary/10 text-primary' :
+                            'bg-secondary/10 text-secondary'
                         }`}>
                         {data.duration}
                     </span>
                 </div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">{data.label}</h3>
-                <ul className="text-xs text-gray-500 space-y-1 list-disc pl-3">
+                <h3 className="font-bold text-foreground text-sm mb-1">{data.label}</h3>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-3">
                     {data.goals.slice(0, 2).map((goal: string, i: number) => (
                         <li key={i}>{goal}</li>
                     ))}
@@ -39,7 +39,7 @@ const RoadmapNode = ({ data }: { data: any }) => {
                 </ul>
             </div>
 
-            <Handle type="source" position={Position.Right} className="!bg-indigo-500" />
+            <Handle type="source" position={Position.Right} className="!bg-primary" />
         </div>
     );
 };
@@ -88,10 +88,10 @@ export default function RoadmapFlow({ roadmapData }: RoadmapFlowProps) {
                     source: phases[index - 1],
                     target: phaseKey,
                     animated: true,
-                    style: { stroke: '#6366f1', strokeWidth: 2 },
+                    style: { stroke: 'var(--primary)', strokeWidth: 2 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
-                        color: '#6366f1',
+                        color: 'var(--primary)',
                     },
                 });
             }
