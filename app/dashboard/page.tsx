@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
+import connectDB from '@/lib/mongodb/connection';
+import { Student } from '@/lib/mongodb/models/Student';
+import { Career } from '@/lib/mongodb/models/Career';
 
 export default async function DashboardPage({
   searchParams,
@@ -15,21 +18,21 @@ export default async function DashboardPage({
   let allRoadmaps: any[] = [];
 
   try {
+    await connectDB();
+    
     // Fetch student with populated skills/courses
-    const studentRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students?id=${studentId}`, {
-      cache: 'no-store'
-    });
-    const studentData = await studentRes.json();
+    const dbStudent = await Student.findOne({ studentCode: studentId })
+      .populate('studentSkills.skillId')
+      .populate('studentCourses.courseId')
+      .lean();
 
-    if (studentData.student) {
-      const dbStudent = studentData.student;
-
+    if (dbStudent) {
       // Transform database student to dashboard format
       student = {
         id: dbStudent.studentCode,
         name: dbStudent.fullName,
         actualCareer: dbStudent.currentCareer || 'Backend Developer',
-        gpa: dbStudent.gpa,
+        gpa: dbStudent.cpa || 0,
         personality: {
           mbti: dbStudent.personality?.mbti || 'ISTJ',
           traits: dbStudent.personality?.traits || {
@@ -63,14 +66,13 @@ export default async function DashboardPage({
     }
 
     // Fetch careers (which serve as roadmaps source in this context)
-    const careersRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`, {
-      cache: 'no-store'
-    });
-    const careersData = await careersRes.json();
+    const dbCareers = await Career.find({}).lean();
     
-    if (careersData.careers) {
-        hotCareers = careersData.careers.slice(0, 6);
-        allRoadmaps = careersData.careers;
+    if (dbCareers) {
+        // Serialize ObjectIds to strings
+        const serializedCareers = JSON.parse(JSON.stringify(dbCareers));
+        hotCareers = serializedCareers.slice(0, 6);
+        allRoadmaps = serializedCareers;
     }
 
   } catch (error) {
@@ -98,12 +100,12 @@ export default async function DashboardPage({
         systemDesign: 5,
         dataAnalysis: 7,
       },
-      interests: ["coding", "backend", "databases"],
+      interests: ["Web Development", "Cloud Computing", "AI"],
     };
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background selection:bg-primary/20">
       {/* Header */}
       <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">

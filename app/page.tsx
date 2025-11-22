@@ -148,7 +148,7 @@ export default async function Home() {
                   <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">AI</div>
                   <div>
                     <div className="text-xs text-muted-foreground">Career Advisor</div>
-                    <div className="text-sm font-bold text-foreground">"Try Software Eng..."</div>
+                    <div className="text-sm font-bold text-foreground">"Try Software Engineer"</div>
                   </div>
                 </div>
               </div>
@@ -236,6 +236,7 @@ export default async function Home() {
           {/* Tall Card */}
           <div className="md:col-span-1 row-span-1 relative group overflow-hidden rounded-3xl border border-border bg-card p-8 hover:shadow-2xl hover:shadow-purple-500/5 transition-all duration-500">
             <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-purple-500/5 to-transparent opacity-50"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-secondary/10"></div>
             <div className="relative z-10">
               <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 mb-6">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
@@ -249,7 +250,7 @@ export default async function Home() {
       </main>
 
       {/* Examples Section */}
-      <section className="py-24 px-6 bg-card/30 border-t border-border/50">
+      {/* <section className="py-24 px-6 bg-card/30 border-t border-border/50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-12">
             <div>
@@ -276,7 +277,7 @@ export default async function Home() {
             />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="bg-card border-t border-border py-12 px-6">

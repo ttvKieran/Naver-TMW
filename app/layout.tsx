@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ClovaX API Cookbook",
-  description: "Interactive examples showcasing Naver's ClovaX Chat Completions API",
+  title: "Leopath - Con Đường Tri Thức",
+  description: "Khám phá lộ trình học tập cá nhân và phát triển sự nghiệp qua Leopath.",
 };
 
 export default function RootLayout({
