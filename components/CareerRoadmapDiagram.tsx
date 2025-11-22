@@ -19,19 +19,14 @@ import {
 } from '@/lib/roadmapGraph';
 
 export type DiagramDetailSelection =
-  | {
+  {
     type: 'topic';
     phaseKey: string;
     topicIndex: number;
     source: 'learning_path' | 'goal';
     title: string;
     meta: string;
-  }
-  | {
-    type: 'milestone';
-    phaseKey: string;
-    milestoneIndex: number;
-    title: string;
+    milestone?: string | null;
   };
 
 interface PhaseNodeData {
@@ -63,28 +58,11 @@ interface TerminalNodeData {
   variant: 'start' | 'end';
 }
 
-interface DetailNodeData {
-  label: string;
-  variant: 'milestone' | 'project';
-  phaseKey: string;
-  topicIndex: number;
-  milestoneIndex?: number | null;
-}
-
 const topicBadgeColors = ['#e0e7ff', '#cffafe', '#fee2e2', '#fef9c3'];
-const detailColors: Record<DetailNodeData['variant'], { border: string; fill: string }> = {
-  milestone: { border: '#fcd34d', fill: '#fffbeb' },
-  project: { border: '#fed7aa', fill: '#fff7ed' },
-};
-
-const DETAIL_NODE_X_OFFSET = 280;
-const DETAIL_NODE_GAP_Y = 70;
-const DETAIL_STACK_WIDTH = 230;
-const DETAIL_VERTICAL_PADDING = 80;
 
 function PhaseNode({ data }: NodeProps<PhaseNodeData>) {
   return (
-    <div className="w-72 rounded-3xl border border-border bg-card shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
+    <div className="w-80 rounded-3xl border border-border bg-card shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
       <div
         className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-white"
         style={{ backgroundColor: data.accent }}
@@ -130,7 +108,7 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
 
   return (
     <div
-      className={`w-64 rounded-xl border bg-card shadow-sm transition-all ${data.isActive ? 'border-primary shadow-lg ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
+      className={`w-80 rounded-xl border bg-card shadow-sm transition-all ${data.isActive ? 'border-primary shadow-lg ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
         }`}
     >
       <div className="px-4 py-3 space-y-2">
@@ -142,25 +120,6 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
         <p className="text-sm font-bold text-foreground leading-snug break-words">
           {data.title}
         </p>
-        {data.isActive && (
-          <div className="pt-3 border-t border-dashed border-border text-xs text-muted-foreground space-y-2 max-h-32 overflow-y-auto">
-            {data.resources.length > 0 && (
-              <div>
-                <p className="font-bold text-foreground mb-1 text-[10px] uppercase tracking-wide">
-                  Resources
-                </p>
-                <ul className="space-y-1.5">
-                  {data.resources.slice(0, 3).map((resource, idx) => (
-                    <li key={idx} className="text-[11px] break-words flex items-start gap-1.5">
-                      <span className="text-primary mt-0.5">•</span>
-                      {resource}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -181,41 +140,10 @@ function TerminalNode({ data }: NodeProps<TerminalNodeData>) {
   );
 }
 
-function DetailNode({ data }: NodeProps<DetailNodeData>) {
-  if (data.variant === 'milestone') {
-    return (
-      <div className="w-52 rounded-xl border border-yellow-400/50 bg-yellow-50/50 shadow-sm px-4 py-3 text-xs text-foreground">
-        <p className="uppercase text-[10px] text-yellow-700 font-bold tracking-wide mb-1">
-          Milestone
-        </p>
-        <p className="text-sm font-bold text-foreground break-words leading-snug">
-          {data.label}
-        </p>
-      </div>
-    );
-  }
-
-  const palette = detailColors.project;
-  return (
-    <div
-      className="w-52 rounded-xl border px-3 py-2 text-xs font-medium text-foreground shadow-sm bg-card"
-      style={{ borderColor: 'var(--border)' }}
-    >
-      <p className="uppercase tracking-wide text-[10px] text-muted-foreground mb-1 font-bold">
-        Project / Practice
-      </p>
-      <p className="text-[11px] leading-snug break-words line-clamp-2 font-medium">
-        {data.label}
-      </p>
-    </div>
-  );
-}
-
 const nodeTypes = {
   phase: PhaseNode,
   topic: TopicNode,
   terminal: TerminalNode,
-  detail: DetailNode,
 };
 
 interface CareerRoadmapDiagramProps {
@@ -282,7 +210,7 @@ export default function CareerRoadmapDiagram({
     }
   }, [graph.nodes, activeTopicId, onSelectDetail]);
 
-  const nodesWithActiveFlag = useMemo(() => {
+  const nodes = useMemo(() => {
     return graph.nodes.map((node) => {
       if (node.type === 'topic' && node.id === activeTopicId) {
         return {
@@ -300,134 +228,9 @@ export default function CareerRoadmapDiagram({
     });
   }, [graph.nodes, activeTopicId]);
 
-  const activeTopicNode = useMemo(() => {
-    if (!activeTopicId) return null;
-    return nodesWithActiveFlag.find(
-      (node) => node.id === activeTopicId && node.type === 'topic'
-    ) as Node<TopicNodeData> | undefined | null;
-  }, [nodesWithActiveFlag, activeTopicId]);
-
-  const detailNodes = useMemo<Node<DetailNodeData>[]>(() => {
-    if (!activeTopicNode) return [];
-    const topicData = activeTopicNode.data as TopicNodeData;
-    const nodes: Node<DetailNodeData>[] = [];
-    const baseX = activeTopicNode.position.x + DETAIL_NODE_X_OFFSET;
-
-    let rowIndex = 0;
-    const nodeY = (index: number) =>
-      activeTopicNode.position.y + index * DETAIL_NODE_GAP_Y;
-
-    if (topicData.milestone) {
-      nodes.push({
-        id: `${activeTopicNode.id}-milestone`,
-        type: 'detail',
-        position: {
-          x: baseX,
-          y: nodeY(rowIndex),
-        },
-        data: {
-          label: topicData.milestone,
-          variant: 'milestone',
-          phaseKey: topicData.phaseKey,
-          topicIndex: topicData.topicIndex,
-          milestoneIndex: topicData.milestoneIndex,
-        },
-        draggable: false,
-      });
-      rowIndex += 1;
-    }
-
-    topicData.projects.slice(0, 3).forEach((label, idx) => {
-      nodes.push({
-        id: `${activeTopicNode.id}-project-${idx}`,
-        type: 'detail',
-        position: {
-          x: baseX,
-          y: nodeY(rowIndex) + 20,
-        },
-        data: {
-          label,
-          variant: 'project',
-          phaseKey: topicData.phaseKey,
-          topicIndex: topicData.topicIndex,
-        },
-        draggable: false,
-      });
-      rowIndex += 1;
-    });
-
-    return nodes;
-  }, [activeTopicNode]);
-
-  const detailEdges = useMemo<Edge[]>(() => {
-    if (!activeTopicNode) return [];
-    return detailNodes.map((node) => {
-      const palette = detailColors[node.data.variant];
-      return {
-        id: `edge-${activeTopicNode.id}-${node.id}`,
-        source: activeTopicNode.id,
-        target: node.id,
-        type: 'smoothstep',
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: palette.border,
-          width: 12,
-          height: 12,
-        },
-        style: {
-          stroke: palette.border,
-          strokeWidth: 1.2,
-        },
-      };
-    });
-  }, [activeTopicNode, detailNodes]);
-
-  const responsiveNodes = useMemo(() => {
-    if (!activeTopicNode || detailNodes.length === 0) {
-      return nodesWithActiveFlag;
-    }
-
-    const detailWidth = DETAIL_STACK_WIDTH;
-    const detailHeight =
-      Math.max(detailNodes.length * (DETAIL_NODE_GAP_Y - 50), (DETAIL_NODE_GAP_Y - 100)) +
-      DETAIL_VERTICAL_PADDING;
-    const horizontalTrigger = activeTopicNode.position.x + 140;
-    const verticalTrigger = activeTopicNode.position.y + 20;
-
-    return nodesWithActiveFlag.map((node) => {
-      if (node.id === activeTopicNode.id) {
-        return node;
-      }
-
-      let nextX = node.position.x;
-      let nextY = node.position.y;
-
-      if (node.position.x >= horizontalTrigger) {
-        nextX += detailWidth;
-      }
-
-      if (node.position.y >= verticalTrigger) {
-        nextY += detailHeight;
-      }
-
-      if (nextX === node.position.x && nextY === node.position.y) {
-        return node;
-      }
-
-      return {
-        ...node,
-        position: { x: nextX, y: nextY },
-      };
-    });
-  }, [nodesWithActiveFlag, activeTopicNode, detailNodes.length]);
-
-  const nodes = useMemo(() => {
-    return [...responsiveNodes, ...detailNodes];
-  }, [responsiveNodes, detailNodes]);
-
   const edges = useMemo(() => {
-    return [...graph.edges, ...detailEdges];
-  }, [graph.edges, detailEdges]);
+    return graph.edges;
+  }, [graph.edges]);
 
   const togglePhaseExpansion = useCallback(
     (phaseKey: string) => {
@@ -475,20 +278,8 @@ export default function CareerRoadmapDiagram({
           source: data.source,
           title: data.title,
           meta: data.meta,
+          milestone: data.milestone,
         });
-        return;
-      }
-
-      if (node.type === 'detail') {
-        const detailData = node.data as DetailNodeData;
-        if (detailData.variant === 'milestone') {
-          onSelectDetail?.({
-            type: 'milestone',
-            phaseKey: detailData.phaseKey,
-            milestoneIndex: detailData.milestoneIndex ?? 0,
-            title: detailData.label,
-          });
-        }
         return;
       }
     },
@@ -525,8 +316,6 @@ export default function CareerRoadmapDiagram({
                 return '#4f46e5';
               case 'topic':
                 return '#14b8a6';
-              case 'detail':
-                return '#94a3b8';
               default:
                 return '#64748b';
             }

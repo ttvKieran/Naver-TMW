@@ -19,6 +19,7 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
     subtitle?: string;
     resources?: string[];
     projects?: string[];
+    milestone?: string | null;
   }>(null);
 
   const handlePhaseSelect = useCallback((phaseKey: string | null) => {
@@ -52,6 +53,7 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
           subtitle: `Week ${entry.week}`,
           resources: entry.resources,
           projects: entry.projects,
+          milestone: detail.milestone,
         });
       } else {
         const goal = phase.goals[detail.topicIndex];
@@ -60,19 +62,10 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
           kind: 'goal',
           phaseTitle: phase.title,
           title: goal,
+          milestone: detail.milestone,
         });
       }
       return;
-    }
-
-    if (detail.type === 'milestone') {
-      const milestone = phase.milestones[detail.milestoneIndex];
-      if (!milestone) return;
-      setSelectedDetail({
-        kind: 'milestone',
-        phaseTitle: phase.title,
-        title: milestone,
-      });
     }
   }, [roadmap]);
 
@@ -113,12 +106,12 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Interactive Diagram */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm h-full">
               <h2 className="text-xl font-bold mb-6 text-foreground flex items-center gap-2">
                 <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">🗺️</span>
                 Interactive Roadmap
               </h2>
-              <div className="h-[600px] w-full bg-background/50 rounded-2xl border border-border/50 overflow-hidden relative">
+              <div className="h-[800px] w-full bg-background/50 rounded-2xl border border-border/50 overflow-hidden relative">
                 <CareerRoadmapDiagram
                   phases={roadmap}
                   onSelectPhase={handlePhaseSelect}
@@ -129,62 +122,26 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
                 </div>
               </div>
             </div>
-
-            {/* Skills & Tools Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
-                  <span className="text-primary">🛠️</span> Key Skills
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {skills.map((skill: string) => (
-                    <span key={skill} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-sm font-medium border border-border hover:border-primary/30 transition-colors">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
-                  <span className="text-secondary">🏆</span> Certifications
-                </h3>
-                <ul className="space-y-2">
-                  {certifications.map((cert: string) => (
-                    <li key={cert} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <svg className="w-5 h-5 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {cert}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            {/* Top Companies */}
-            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
-                  <span className="text-green-500">🏢</span> Top Employers
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {career.companies?.map((company: string) => (
-                    <span key={company} className="px-4 py-2 bg-background border border-border rounded-xl text-sm font-bold text-foreground shadow-sm">
-                      {company}
-                    </span>
-                  )) || <span className="text-muted-foreground text-sm">Information not available</span>}
-                </div>
-            </div>
           </div>
 
-          {/* Right Column: Details Panel */}
+          {/* Right Column: Details & Info Panel */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               {selectedDetail ? (
                 <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-lg shadow-primary/5 ring-1 ring-primary/10 animate-in slide-in-from-right-4 duration-300">
                   <div className="mb-4 pb-4 border-b border-border/50">
-                    <div className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                      {selectedDetail.phaseTitle}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs font-bold text-primary uppercase tracking-wider">
+                        {selectedDetail.phaseTitle}
+                      </div>
+                      <button 
+                        onClick={() => setSelectedDetail(null)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
                     <h3 className="text-xl font-bold text-foreground">
                       {selectedDetail.title}
@@ -197,6 +154,21 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
                   </div>
 
                   <div className="space-y-6">
+                    {selectedDetail.milestone && (
+                      <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 text-foreground p-5 rounded-xl border border-purple-500/20 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
+                        <div className="flex items-start gap-3 relative z-10">
+                          <span className="text-2xl">🚩</span>
+                          <div>
+                            <strong className="block text-purple-700 dark:text-purple-400 text-sm uppercase tracking-wide mb-1">Milestone Reached</strong>
+                            <p className="text-sm font-medium leading-relaxed">
+                              {selectedDetail.milestone}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {selectedDetail.resources && selectedDetail.resources.length > 0 && (
                       <div>
                         <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
@@ -207,7 +179,7 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
                         </h4>
                         <ul className="space-y-2">
                           {selectedDetail.resources.map((resource, idx) => (
-                            <li key={idx} className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-lg border border-border/50">
+                            <li key={idx} className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
                               {resource}
                             </li>
                           ))}
@@ -225,7 +197,7 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
                         </h4>
                         <ul className="space-y-2">
                           {selectedDetail.projects.map((project, idx) => (
-                            <li key={idx} className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-lg border border-border/50">
+                            <li key={idx} className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border/50 hover:border-secondary/30 transition-colors">
                               {project}
                             </li>
                           ))}
@@ -238,23 +210,54 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
                         <strong>Goal:</strong> This is a key learning objective for this phase. Focus on mastering the concepts.
                       </div>
                     )}
-
-                    {selectedDetail.kind === 'milestone' && (
-                      <div className="bg-purple-500/10 text-purple-700 p-4 rounded-xl border border-purple-500/20 text-sm">
-                        <strong>Milestone:</strong> This represents a significant achievement or project completion.
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : (
-                <div className="bg-card border border-border/50 rounded-3xl p-8 text-center shadow-sm">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                    👆
+                <div className="space-y-6 animate-in fade-in duration-500">
+                  {/* Skills Section */}
+                  <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
+                      <span className="text-primary">🛠️</span> Key Skills
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill: string) => (
+                        <span key={skill} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-sm font-medium border border-border hover:border-primary/30 transition-colors">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">Select an Item</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Click on any node in the roadmap diagram to view detailed learning resources, projects, and goals.
-                  </p>
+
+                  {/* Certifications Section */}
+                  <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
+                      <span className="text-secondary">🏆</span> Certifications
+                    </h3>
+                    <ul className="space-y-2">
+                      {certifications.map((cert: string) => (
+                        <li key={cert} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <svg className="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="flex-1">{cert}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Top Companies */}
+                  <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
+                      <span className="text-green-500">🏢</span> Top Employers
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {career.companies?.map((company: string) => (
+                        <span key={company} className="px-3 py-1.5 bg-background border border-border rounded-lg text-sm font-bold text-foreground shadow-sm">
+                          {company}
+                        </span>
+                      )) || <span className="text-muted-foreground text-sm">Information not available</span>}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

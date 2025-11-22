@@ -21,10 +21,10 @@ export interface RoadmapGraphResult {
   edges: Edge[];
 }
 
-const COLUMN_WIDTH = 320;
+const COLUMN_WIDTH = 360;
 const PHASE_Y = -40;
 const TOPIC_START_Y = 140;
-const TOPIC_GAP_Y = 110;
+const TOPIC_GAP_Y = 130;
 const MAX_TOPICS = 4;
 
 const PHASE_ACCENTS = ["#6366f1", "#0ea5e9", "#f97316", "#10b981"];
