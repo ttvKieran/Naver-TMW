@@ -2,75 +2,81 @@ import mongoose, { Schema, Model } from 'mongoose';
 
 export interface IStudent {
   userId: mongoose.Types.ObjectId;
-  studentCode: string;
+  studentCode: string; // user_id in users.json
   
   // Personal Info
-  fullName: string;
+  fullName: string; // full_name in users.json
   dateOfBirth?: Date;
   gender?: 'male' | 'female' | 'other';
   phone?: string;
   
-  // Academic Info
+  // Academic Info (academic object in users.json)
+  academic: {
+    currentSemester: number; // current_semester
+    gpa: number; // gpa (thang 4.0)
+    courses: Array<{
+      code: string;
+      name: string;
+      semester: number; // kỳ học (1-9)
+      grade: number; // thang 10
+    }>;
+  };
   university?: string;
   major?: string;
-  currentYear?: number;
-  cpa?: number;
-  expectedGraduation?: Date;
   
-  // Personality Assessment
-  personality: {
+  // Career Info (career object in users.json)
+  career: {
+    targetCareerID: string; // target_career_id
+    actualCareer?: string; // actual_career
+    targetConfidence?: number; // target_confidence
+  };
+  
+  // Availability
+  availability: {
+    timePerWeekHours: number; // time_per_week_hours
+  };
+  
+  // Skills (skills object in users.json)
+  skills: {
+    technical: Record<string, number>; // python: 4, javascript: 3, etc. (1-10)
+    general: Record<string, number>; // programming: 5, problem_solving: 8, etc. (1-10)
+  };
+  
+  // IT and Soft Skills (arrays in users.json)
+  itSkill: string[]; // it_skill array
+  softSkill: string[]; // soft_skill array
+  
+  // Interests & Projects
+  interests: string[]; // interests array (game_dev, web_dev, etc.)
+  projects: string[]; // projects array
+  
+  // Personality Assessment (optional, for future use)
+  personality?: {
     mbti?: string;
-    traits: {
-      analytical: number;
-      creative: number;
-      teamwork: number;
-      leadership: number;
-      technical: number;
+    traits?: {
+      analytical?: number;
+      creative?: number;
+      teamwork?: number;
+      leadership?: number;
+      technical?: number;
     };
     assessmentDate?: Date;
     assessmentSource?: 'self' | 'ai' | 'test';
   };
   
-  // Skills Assessment (References to Skills collection)
-  studentSkills: Array<{
-    skillId: mongoose.Types.ObjectId;
-    proficiencyLevel: number; // 1-10 scale
-    lastAssessed?: Date;
-    source?: 'self-assessment' | 'ai-evaluation' | 'course-completion' | 'project';
-    verifiedBy?: mongoose.Types.ObjectId; // User who verified
-  }>;
-  
-  // Courses (References to Courses collection)
-  studentCourses: Array<{
-    courseId: mongoose.Types.ObjectId;
-    status: 'not-started' | 'in-progress' | 'completed' | 'dropped';
-    enrollmentDate?: Date;
-    completionDate?: Date;
-    progress?: number; // 0-100%
-    certificateUrl?: string;
-    grade?: string;
-    notes?: string;
-  }>;
-  
-  // Interests & Preferences
-  interests: string[];
+  // Career Goals
   careerGoals?: string;
-  workPreferences?: {
-    preferredIndustries?: string[];
-    preferredWorkStyle?: 'remote' | 'office' | 'hybrid';
-    willingToRelocate?: boolean;
-    salaryExpectation?: {
-      min?: number;
-      max?: number;
-      currency?: string;
-    };
+  careerStatus?: 'exploring' | 'decided' | 'transitioning';
+  aiCareerRecommendation?: string; // HCX-007 career recommendation text
+  
+  // Metadata (meta object in users.json)
+  meta?: {
+    source?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
   };
   
-  // Current Status
-  currentCareer?: string;
-  careerStatus?: 'exploring' | 'decided' | 'transitioning';
-  
-  // Metadata
+  // MongoDB timestamps
   createdAt: Date;
   updatedAt: Date;
   profileCompleteness: number;
@@ -88,7 +94,6 @@ const StudentSchema = new Schema<IStudent>(
       type: String,
       required: true,
       unique: true,
-      uppercase: true,
     },
     
     // Personal Info
@@ -104,33 +109,113 @@ const StudentSchema = new Schema<IStudent>(
     },
     phone: String,
     
-    // Academic Info
+    // Academic Info (matching users.json structure)
+    academic: {
+      currentSemester: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 12,
+      },
+      gpa: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 4.0,
+      },
+      courses: [
+        {
+          _id: false, // Tắt auto-generate _id cho subdocuments
+          code: {
+            type: String,
+            required: true,
+          },
+          name: {
+            type: String,
+            required: true,
+          },
+          semester: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 9, // kỳ học (1-9)
+          },
+          grade: {
+            type: Number,
+            required: true,
+            min: 0,
+            max: 10, // thang 10
+          },
+        },
+      ],
+    },
     university: String,
     major: String,
-    currentYear: {
-      type: Number,
-      min: 1,
-      max: 6,
-    },
-    cpa: {
-      type: Number,
-      min: 0,
-      max: 4.0,
-    },
-    expectedGraduation: Date,
     
-    // Personality
+    // Career Info
+    career: {
+      targetCareerID: {
+        type: String,
+        required: true,
+      },
+      actualCareer: String,
+      targetConfidence: Number,
+    },
+    
+    // Availability
+    availability: {
+      timePerWeekHours: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 168, // max hours in a week
+      },
+    },
+    
+    // Skills (matching users.json structure)
+    skills: {
+      technical: {
+        type: Map,
+        of: Number, // skill_name: level (1-10)
+      },
+      general: {
+        type: Map,
+        of: Number, // skill_name: level (1-10)
+      },
+    },
+    
+    // IT and Soft Skills arrays
+    itSkill: {
+      type: [String],
+      default: [],
+    },
+    softSkill: {
+      type: [String],
+      default: [],
+    },
+    
+    // Interests & Projects
+    interests: {
+      type: [String],
+      default: [],
+    },
+    projects: {
+      type: [String],
+      default: [],
+    },
+    
+    // Personality (optional)
     personality: {
       mbti: {
         type: String,
         uppercase: true,
       },
       traits: {
-        analytical: { type: Number, min: 0, max: 10, default: 5 },
-        creative: { type: Number, min: 0, max: 10, default: 5 },
-        teamwork: { type: Number, min: 0, max: 10, default: 5 },
-        leadership: { type: Number, min: 0, max: 10, default: 5 },
-        technical: { type: Number, min: 0, max: 10, default: 5 },
+        analytical: { type: Number, min: 0, max: 10 },
+        creative: { type: Number, min: 0, max: 10 },
+        teamwork: { type: Number, min: 0, max: 10 },
+        leadership: { type: Number, min: 0, max: 10 },
+        technical: { type: Number, min: 0, max: 10 },
       },
       assessmentDate: Date,
       assessmentSource: {
@@ -139,89 +224,20 @@ const StudentSchema = new Schema<IStudent>(
       },
     },
     
-    // Skills (References)
-    studentSkills: [
-      {
-        skillId: {
-          type: Schema.Types.ObjectId,
-          ref: 'Skill',
-          required: true,
-        },
-        proficiencyLevel: {
-          type: Number,
-          min: 1,
-          max: 10,
-          required: true,
-        },
-        lastAssessed: Date,
-        source: {
-          type: String,
-          enum: ['self-assessment', 'ai-evaluation', 'course-completion', 'project'],
-          default: 'self-assessment',
-        },
-        verifiedBy: {
-          type: Schema.Types.ObjectId,
-          ref: 'User',
-        },
-      },
-    ],
-    
-    // Courses (References)
-    studentCourses: [
-      {
-        courseId: {
-          type: Schema.Types.ObjectId,
-          ref: 'Course',
-          required: true,
-        },
-        status: {
-          type: String,
-          enum: ['not-started', 'in-progress', 'completed', 'dropped'],
-          default: 'not-started',
-        },
-        enrollmentDate: Date,
-        completionDate: Date,
-        progress: {
-          type: Number,
-          min: 0,
-          max: 100,
-          default: 0,
-        },
-        certificateUrl: String,
-        grade: String,
-        notes: String,
-      },
-    ],
-    
-    // Interests
-    interests: {
-      type: [String],
-      default: [],
-    },
+    // Career Goals
     careerGoals: String,
-    workPreferences: {
-      preferredIndustries: [String],
-      preferredWorkStyle: {
-        type: String,
-        enum: ['remote', 'office', 'hybrid'],
-      },
-      willingToRelocate: Boolean,
-      salaryExpectation: {
-        min: Number,
-        max: Number,
-        currency: {
-          type: String,
-          default: 'VND',
-        },
-      },
-    },
-    
-    // Status
-    currentCareer: String,
     careerStatus: {
       type: String,
       enum: ['exploring', 'decided', 'transitioning'],
       default: 'exploring',
+    },
+    aiCareerRecommendation: String, // HCX-007 career recommendation
+    
+    // Metadata
+    meta: {
+      source: String,
+      createdAt: Date,
+      updatedAt: Date,
     },
     
     profileCompleteness: {
@@ -236,20 +252,9 @@ const StudentSchema = new Schema<IStudent>(
   }
 );
 
-// Calculate profile completeness before saving
-StudentSchema.pre('save', function (next) {
-  const requiredFields = [
-    this.fullName,
-    this.cpa,
-    this.personality?.mbti,
-    this.studentSkills?.length,
-    this.interests?.length,
-  ];
-  
-  const filledFields = requiredFields.filter((field) => field !== undefined && field !== null).length;
-  this.profileCompleteness = Math.round((filledFields / requiredFields.length) * 100);
-  
-  next();
-});
+// Xóa cached model để đảm bảo schema mới được load
+if (mongoose.models.Student) {
+  delete mongoose.models.Student;
+}
 
-export const Student: Model<IStudent> = mongoose.models.Student || mongoose.model<IStudent>('Student', StudentSchema);
+export const Student: Model<IStudent> = mongoose.model<IStudent>('Student', StudentSchema);

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface Skill {
   name: string;
@@ -17,7 +18,13 @@ interface StudentDashboardProps {
     id: string;
     name: string;
     actualCareer: string;
-    cpa: number;
+    predictedCareer?: string; // AI predicted career
+    targetConfidence?: number; // Confidence score
+    aiCareerRecommendation?: string; // HCX-007 recommendation
+    gpa: number;
+    currentSemester?: number;
+    university: String;
+    major: String;
     personality: {
       mbti: string;
       traits: {
@@ -28,14 +35,10 @@ interface StudentDashboardProps {
         technical: number;
       };
     };
-    skills: {
-      programming: number;
-      problemSolving: number;
-      communication: number;
-      systemDesign: number;
-      dataAnalysis: number;
-    };
+    skills: Record<string, number>;
     interests: string[];
+    itSkills?: string[]; // IT skills from registration
+    softSkills?: string[]; // Soft skills from registration
   };
   hotCareers: Array<{
     id: string;
@@ -49,24 +52,11 @@ interface StudentDashboardProps {
     };
   }>;
   currentRoadmap?: {
-    title: string;
-    description: string;
-    // Old format (hardcoded)
-    roadmap?: {
-      beginner?: { title: string; duration: string; goals: string[] };
-      intermediate?: { title: string; duration: string; goals: string[] };
-      advanced?: { title: string; duration: string; goals: string[] };
-      expert?: { title: string; duration: string; goals: string[] };
-    };
-    // New format (database)
-    levels?: Array<{
-      levelId: string;
-      levelNumber: number;
-      title: string;
-      description?: string;
-      duration: string;
-      goals: string[];
-    }>;
+    _id?: string; // Roadmap ID for link
+    careerName: string;
+    description?: string;
+    generatedAt?: string;
+    stagesCount: number;
   };
   currentCareerId?: string | null;
 }
@@ -210,60 +200,109 @@ export default function StudentDashboard({ student, hotCareers, currentRoadmap, 
       {/* Header */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h2 className="text-3xl font-bold text-gray-900">{student.name}</h2>
             <p className="text-gray-600 mt-1">ID: {student.id}</p>
-            <div className="flex gap-3 mt-3">
+            <div className="flex gap-3 mt-3 flex-wrap">
               <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                {student.personality.mbti}
+                {student.university}
               </span>
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                {student.major}
+              </span>
+              {student.predictedCareer && (
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  {student.predictedCareer}
+                </span>
+              )}
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                 {student.actualCareer}
               </span>
+              {student.currentSemester && (
+                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                  Semester {student.currentSemester}
+                </span>
+              )}
             </div>
           </div>
-          <div className="text-center">
+          <div className="text-center ml-6">
             <div className="text-sm text-gray-600 mb-1">GPA</div>
-            <div className="text-5xl font-bold text-blue-600">{student.cpa}</div>
+            <div className="text-5xl font-bold text-blue-600">{student.gpa?.toFixed(2) || '0.00'}</div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Biểu đồ kỹ năng */}
+      {/* AI Career Recommendation */}
+      {student.aiCareerRecommendation && (
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-md p-6 border-2 border-purple-200">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span className="mr-2">💡</span>
+            Lời khuyên nghề nghiệp từ AI
+          </h3>
+          <div className="prose prose-sm max-w-none text-gray-700">
+            <ReactMarkdown>{student.aiCareerRecommendation}</ReactMarkdown>
+          </div>
+        </div>
+      )}
+
+      {/* Skills & Interests Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* IT Skills */}
+        {student.itSkills && student.itSkills.length > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <span className="mr-2">💻</span>
+              IT Skills
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {student.itSkills.map((skill) => (
+                <span
+                  key={skill}
+                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Soft Skills */}
+        {student.softSkills && student.softSkills.length > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <span className="mr-2">🤝</span>
+              Soft Skills
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {student.softSkills.map((skill) => (
+                <span
+                  key={skill}
+                  className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Interests */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Kỹ Năng
+            <span className="mr-2">❤️</span>
+            Sở Thích
           </h3>
-          <SkillsChart skills={student.skills} />
-        </div>
-
-        {/* Biểu đồ tính cách */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Tính Cách ({student.personality.mbti})
-          </h3>
-          <PersonalityRadar traits={student.personality.traits} />
-        </div>
-      </div>
-
-      {/* Sở thích */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-          <span className="mr-2"></span>
-          Sở Thích
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {student.interests.map((interest) => (
-            <span
-              key={interest}
-              className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium"
-            >
-              {interest}
-            </span>
-          ))}
+          <div className="flex flex-wrap gap-2">
+            {student.interests.map((interest) => (
+              <span
+                key={interest}
+                className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -293,75 +332,46 @@ export default function StudentDashboard({ student, hotCareers, currentRoadmap, 
         {/* Roadmap đang theo đuổi */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2"></span>
-            Roadmap Đang Theo Đuổi
+            Lộ trình Cá nhân hóa
           </h3>
           {currentRoadmap ? (
-            <div>
-              <h4 className="text-lg font-semibold text-blue-600 mb-2">
-                {currentRoadmap.title}
-              </h4>
-              <p className="text-gray-600 mb-4">{currentRoadmap.description}</p>
-              
-              <div className="space-y-4">
-                {/* Handle new database format with levels array */}
-                {currentRoadmap.levels && Array.isArray(currentRoadmap.levels) ? (
-                  currentRoadmap.levels.slice(0, 3).map((level: any) => (
-                    <div key={level.levelId || level.levelNumber} className="border-l-4 border-blue-500 pl-4 py-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <h5 className="font-semibold text-gray-900 capitalize">
-                          {level.title}
-                        </h5>
-                        <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                          {level.duration}
-                        </span>
-                      </div>
-                      <ul className="space-y-1">
-                        {level.goals?.slice(0, 3).map((goal: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{goal}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))
-                ) : currentRoadmap.roadmap && typeof currentRoadmap.roadmap === 'object' ? (
-                  /* Handle old hardcoded format with beginner/intermediate/advanced */
-                  Object.entries(currentRoadmap.roadmap).map(([level, phase]: [string, any]) => (
-                    <div key={level} className="border-l-4 border-blue-500 pl-4 py-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <h5 className="font-semibold text-gray-900 capitalize">
-                          {phase.title}
-                        </h5>
-                        <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                          {phase.duration}
-                        </span>
-                      </div>
-                      <ul className="space-y-1">
-                        {phase.goals?.slice(0, 3).map((goal: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{goal}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))
-                ) : null}
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mb-4">
+                  <span className="text-4xl">🎯</span>
+                </div>
+                <h4 className="text-2xl font-bold text-gray-900 mb-2">
+                  {currentRoadmap.careerName}
+                </h4>
+                <p className="text-gray-600 mb-2">{currentRoadmap.description}</p>
+                {currentRoadmap.stagesCount > 0 && (
+                  <p className="text-sm text-gray-500">
+                    {currentRoadmap.stagesCount} giai đoạn học tập
+                  </p>
+                )}
+                {currentRoadmap.generatedAt && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Tạo ngày: {new Date(currentRoadmap.generatedAt).toLocaleDateString('vi-VN')}
+                  </p>
+                )}
               </div>
               
-              <div className="mt-6">
-                <a
-                  href={`/career-advisor/roadmap?careerId=${currentCareerId || ''}&studentId=${student.id}`}
-                  className="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg font-semibold"
-                >
-                  Xem Roadmap Chi Tiết →
-                </a>
-              </div>
+              <a
+                href="/my-roadmap"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg"
+              >
+                Xem Roadmap Chi Tiết
+                <span>→</span>
+              </a>
             </div>
           ) : (
-            <p className="text-gray-500">Chưa có roadmap cho nghề nghiệp này.</p>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+                <span className="text-4xl">📋</span>
+              </div>
+              <p className="text-gray-500 mb-2 font-medium">Chưa có lộ trình cá nhân hóa</p>
+              <p className="text-sm text-gray-400">Lộ trình sẽ được tạo sau khi đăng ký thành công.</p>
+            </div>
           )}
         </div>
       </div>
