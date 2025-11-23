@@ -1,117 +1,7 @@
-"use client";
+import { Suspense } from 'react';
+import RoadmapPageClient from './RoadmapPageClient';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
-interface PersonalityTraits {
-  analytical: number;
-  creative: number;
-  teamwork: number;
-  leadership: number;
-  technical: number;
-}
-
-interface Skills {
-  programming: number;
-  problemSolving: number;
-  communication: number;
-  systemDesign: number;
-  dataAnalysis: number;
-}
-
-interface ProfileFormData {
-  name: string;
-  gpa: number;
-  mbti: string;
-  traits: PersonalityTraits;
-  skills: Skills;
-  interests: string[];
-}
-
-const mbtiTypes = [
-  'INTJ', 'INTP', 'ENTJ', 'ENTP',
-  'INFJ', 'INFP', 'ENFJ', 'ENFP',
-  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-  'ISTP', 'ISFP', 'ESTP', 'ESFP'
-];
-
-const availableInterests = [
-  'coding', 'design', 'data-science', 'automation',
-  'hardware', 'mobile-apps', 'web-development', 'cloud',
-  'ai-ml', 'security', 'iot', 'robotics'
-];
-
-export default function ProfileForm() {
-  const router = useRouter();
-  const [formData, setFormData] = useState<ProfileFormData>({
-    name: '',
-    gpa: 3.0,
-    mbti: 'INTJ',
-    traits: {
-      analytical: 5,
-      creative: 5,
-      teamwork: 5,
-      leadership: 5,
-      technical: 5,
-    },
-    skills: {
-      programming: 5,
-      problemSolving: 5,
-      communication: 5,
-      systemDesign: 5,
-      dataAnalysis: 5,
-    },
-    interests: [],
-  });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleTraitChange = (trait: keyof PersonalityTraits, value: number) => {
-    setFormData(prev => ({
-      ...prev,
-      traits: { ...prev.traits, [trait]: value }
-    }));
-  };
-
-  const handleSkillChange = (skill: keyof Skills, value: number) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: { ...prev.skills, [skill]: value }
-    }));
-  };
-
-  const toggleInterest = (interest: string) => {
-    setFormData(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch('/api/career-prediction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-      sessionStorage.setItem('profileData', JSON.stringify(formData));
-      sessionStorage.setItem('predictions', JSON.stringify(result.predictions));
-      router.push('/career-advisor/results');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('Có lỗi xảy ra. Vui lòng thử lại.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+export default function RoadmapPage() {
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -305,6 +195,8 @@ export default function ProfileForm() {
           </div>
         </form>
       </div>
-    </div>
+    }>
+      <RoadmapPageClient />
+    </Suspense>
   );
 }

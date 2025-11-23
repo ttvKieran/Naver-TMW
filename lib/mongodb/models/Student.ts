@@ -2,7 +2,7 @@ import mongoose, { Schema, Model } from 'mongoose';
 
 export interface IStudent {
   userId: mongoose.Types.ObjectId;
-  studentCode: string;
+  studentCode: string; // user_id in users.json
   
   // Personal Info
   fullName: string;
@@ -48,7 +48,6 @@ export interface IStudent {
     createdAt?: Date;
     updatedAt?: Date;
   };
-
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,7 +64,6 @@ const StudentSchema = new Schema<IStudent>(
       type: String,
       required: true,
       unique: true,
-      uppercase: true,
     },
     
     // Personal Info

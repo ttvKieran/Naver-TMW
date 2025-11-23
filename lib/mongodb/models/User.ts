@@ -2,7 +2,7 @@ import mongoose, { Schema, Model } from 'mongoose';
 
 export interface IUser {
   email: string;
-  password: string;
+  passwordHash: string; // Changed from password to passwordHash
   name: string;
   role: 'student' | 'admin' | 'counselor';
   studentId?: mongoose.Types.ObjectId;
@@ -22,7 +22,7 @@ const UserSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-    password: {
+    passwordHash: {
       type: String,
       required: true,
     },
@@ -55,4 +55,9 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+// Clear any cached model to ensure schema updates
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
+
+export const User: Model<IUser> = mongoose.model<IUser>('User', UserSchema);

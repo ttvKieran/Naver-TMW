@@ -13,11 +13,9 @@ export async function GET(request: NextRequest) {
     
     if (studentId) {
       console.log('Fetching student:', studentId);
-      // Get single student with populated data
+      // Get single student - new schema doesn't need populate
       const student = await Student.findOne({ studentCode: studentId })
         .populate('userId', 'email name')
-        .populate('studentSkills.skillId')
-        .populate('studentCourses.courseId')
         .lean();
       
       if (!student) {
@@ -33,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Get all students (for selection UI)
     console.log('Fetching all students...');
     const students = await Student.find({})
-      .select('studentCode fullName gpa personality.mbti currentCareer')
+      .select('studentCode fullName academic.gpa career.targetCareerID career.actualCareer')
       .lean();
     
     console.log('Found students:', students.length);

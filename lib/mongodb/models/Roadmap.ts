@@ -1,43 +1,25 @@
 import mongoose, { Schema, Model } from 'mongoose';
 
-// Roadmap Interface & Schema (Hierarchical: Levels → Phases → Skills/Courses)
+// Roadmap Interface & Schema (matching data/jobs/*.json structure)
 export interface IRoadmap {
-  careerId: mongoose.Types.ObjectId;
-  
-  // Metadata
-  title: string;
+  careerID: string; // career_id in jobs JSON
+  careerName: string; // career_name in jobs JSON
   description?: string;
-  version: string;
   
-  // Hierarchical Structure
-  levels: Array<{
-    levelId: string;
-    levelNumber: number;
-    title: string;
+  // Stages structure (matching jobs JSON)
+  stages: Array<{
+    id: string; // stage_1_bde_foundation
+    name: string; // "Giai đoạn 1 - Nền tảng lập trình và hệ thống"
     description?: string;
-    duration: string;
+    orderIndex: number; // order_index
+    recommendedSemesters?: number[]; // recommended_semesters
     
-    // Prerequisites for this level
-    prerequisites?: {
-      previousLevel?: string;
-      minimumGPA?: number;
-      requiredSkills?: Array<{
-        skillId: mongoose.Types.ObjectId;
-        minimumProficiency: number;
-      }>;
-      requiredCourses?: mongoose.Types.ObjectId[];
-    };
-    
-    // Goals
-    goals: string[];
-    
-    // Phases within this level
-    phases: Array<{
-      phaseId: string;
-      phaseNumber: number;
-      title: string;
+    // Areas within stage
+    areas: Array<{
+      id: string; // bde_programming_basics
+      name: string; // "Lập trình cho data"
       description?: string;
-      duration: string;
+      orderIndex: number;
       
       // Skills to learn in this phase
       skillsToLearn: Array<{
@@ -74,29 +56,8 @@ export interface IRoadmap {
         estimatedHours?: number;
         skillTags?: string[];
       }>;
-      
-      isOptional?: boolean;
-      dependencies?: string[];
     }>;
-    
-    // Completion criteria for this level
-    completionCriteria?: {
-      requiredSkillProficiency?: Array<{
-        skillId: mongoose.Types.ObjectId;
-        minimumLevel: number;
-      }>;
-      requiredMilestones?: string[];
-      requiredCourses?: mongoose.Types.ObjectId[];
-      suggestedProjects?: string[];
-    };
   }>;
-  
-  // Overall summary
-  totalDuration?: string;
-  totalSkills?: number;
-  totalCourses?: number;
-  totalMilestones?: number;
-  difficultyProgression?: string;
   
   // Metadata
   isActive: boolean;
@@ -108,93 +69,54 @@ export interface IRoadmap {
 
 const RoadmapSchema = new Schema<IRoadmap>(
   {
-    careerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Career',
+    careerID: {
+      type: String,
       required: true,
+      unique: true,
     },
-    
-    title: {
+    careerName: {
       type: String,
       required: true,
     },
     description: String,
-    version: {
-      type: String,
-      required: true,
-      default: '1.0',
-    },
     
-    // Hierarchical Levels Structure
-    levels: [
+    // Stages structure (matching jobs JSON)
+    stages: [
       {
-        levelId: {
+        id: {
           type: String,
           required: true,
         },
-        levelNumber: {
-          type: Number,
-          required: true,
-        },
-        title: {
+        name: {
           type: String,
           required: true,
         },
         description: String,
-        duration: {
-          type: String,
+        orderIndex: {
+          type: Number,
           required: true,
         },
+        recommendedSemesters: [Number],
         
-        prerequisites: {
-          previousLevel: String,
-          minimumGPA: Number,
-          requiredSkills: [
-            {
-              skillId: {
-                type: Schema.Types.ObjectId,
-                ref: 'Skill',
-              },
-              minimumProficiency: {
-                type: Number,
-                min: 1,
-                max: 10,
-              },
-            },
-          ],
-          requiredCourses: [
-            {
-              type: Schema.Types.ObjectId,
-              ref: 'Course',
-            },
-          ],
-        },
-        
-        goals: [String],
-        
-        // Phases within level
-        phases: [
+        // Areas within stage
+        areas: [
           {
-            phaseId: {
+            id: {
               type: String,
               required: true,
             },
-            phaseNumber: {
-              type: Number,
-              required: true,
-            },
-            title: {
+            name: {
               type: String,
               required: true,
             },
             description: String,
-            duration: {
-              type: String,
+            orderIndex: {
+              type: Number,
               required: true,
             },
             
-            // Skills to learn
-            skillsToLearn: [
+            // Items within area
+            items: [
               {
                 skillId: {
                   type: Schema.Types.ObjectId,
@@ -251,6 +173,15 @@ const RoadmapSchema = new Schema<IRoadmap>(
                   type: String,
                   required: true,
                 },
+                name: {
+                  type: String,
+                  required: true,
+                },
+                itemType: {
+                  type: String,
+                  required: true,
+                  enum: ['skill', 'concept', 'tool', 'project', 'course'],
+                },
                 description: String,
                 skillsApplied: [
                   {
@@ -267,48 +198,10 @@ const RoadmapSchema = new Schema<IRoadmap>(
                 skillTags: [String],
               },
             ],
-            
-            isOptional: {
-              type: Boolean,
-              default: false,
-            },
-            dependencies: [String],
           },
         ],
-        
-        // Completion criteria
-        completionCriteria: {
-          requiredSkillProficiency: [
-            {
-              skillId: {
-                type: Schema.Types.ObjectId,
-                ref: 'Skill',
-              },
-              minimumLevel: {
-                type: Number,
-                min: 1,
-                max: 10,
-              },
-            },
-          ],
-          requiredMilestones: [String],
-          requiredCourses: [
-            {
-              type: Schema.Types.ObjectId,
-              ref: 'Course',
-            },
-          ],
-          suggestedProjects: [String],
-        },
       },
     ],
-    
-    // Summary
-    totalDuration: String,
-    totalSkills: Number,
-    totalCourses: Number,
-    totalMilestones: Number,
-    difficultyProgression: String,
     
     isActive: {
       type: Boolean,
@@ -325,31 +218,8 @@ const RoadmapSchema = new Schema<IRoadmap>(
   }
 );
 
-// Pre-save hook to calculate totals
-RoadmapSchema.pre('save', function (next) {
-  if (this.levels && this.levels.length > 0) {
-    const uniqueSkills = new Set<string>();
-    const uniqueCourses = new Set<string>();
-    let totalMilestones = 0;
-    
-    this.levels.forEach((level) => {
-      level.phases?.forEach((phase) => {
-        phase.skillsToLearn?.forEach((skill) => {
-          uniqueSkills.add(skill.skillId.toString());
-        });
-        phase.recommendedCourses?.forEach((course) => {
-          uniqueCourses.add(course.courseId.toString());
-        });
-        totalMilestones += phase.milestones?.length || 0;
-      });
-    });
-    
-    this.totalSkills = uniqueSkills.size;
-    this.totalCourses = uniqueCourses.size;
-    this.totalMilestones = totalMilestones;
-  }
-  
-  next();
-});
+// Index for faster queries
+RoadmapSchema.index({ careerID: 1 });
+RoadmapSchema.index({ isActive: 1 });
 
 export const Roadmap: Model<IRoadmap> = mongoose.models.Roadmap || mongoose.model<IRoadmap>('Roadmap', RoadmapSchema);

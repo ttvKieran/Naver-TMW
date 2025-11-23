@@ -1,3 +1,6 @@
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
 import connectDB from '@/lib/mongodb/connection';
@@ -14,6 +17,7 @@ export default async function DashboardPage({
 
   // Fetch student data from database
   let student: any = null;
+  let dbStudent: any = null;
   let hotCareers: any[] = [];
   let allRoadmaps: any[] = [];
 
