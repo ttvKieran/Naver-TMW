@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchableSkillInput from '@/components/SearchableSkillInput';
+import ReactMarkdown from 'react-markdown';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -32,8 +33,8 @@ export default function RegisterPage() {
     
     // Step 3: Skills
     skills: {
-      itSkills: [] as string[],
-      softSkills: [] as string[],
+      itSkill: [] as string[],
+      softSkill: [] as string[],
     },
     interests: [] as string[],
     careerGoals: '',
@@ -67,7 +68,7 @@ export default function RegisterPage() {
         return;
       }
     } else if (step === 3) {
-      if (formData.skills.itSkills.length === 0) {
+      if (formData.skills.itSkill.length === 0) {
         setError('Vui lòng thêm ít nhất một IT skill');
         return;
       }
@@ -95,8 +96,8 @@ export default function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          itSkills: formData.skills.itSkills,
-          softSkills: formData.skills.softSkills,
+          itSkill: formData.skills.itSkill,
+          softSkill: formData.skills.softSkill,
           fullName: formData.fullName,
           currentSemester: formData.currentSemester,
           gpa: formData.gpa ? parseFloat(formData.gpa) : undefined,
@@ -344,11 +345,11 @@ export default function RegisterPage() {
                   </label>
                   <SearchableSkillInput
                     skillType="it"
-                    selectedSkills={formData.skills.itSkills}
+                    selectedSkills={formData.skills.itSkill}
                     onSkillsChange={(skills) =>
                       setFormData({
                         ...formData,
-                        skills: { ...formData.skills, itSkills: skills },
+                        skills: { ...formData.skills, itSkill: skills },
                       })
                     }
                     placeholder="Search IT skills (Python, Java, React...)"
@@ -361,11 +362,11 @@ export default function RegisterPage() {
                   </label>
                   <SearchableSkillInput
                     skillType="soft"
-                    selectedSkills={formData.skills.softSkills}
+                    selectedSkills={formData.skills.softSkill}
                     onSkillsChange={(skills) =>
                       setFormData({
                         ...formData,
-                        skills: { ...formData.skills, softSkills: skills },
+                        skills: { ...formData.skills, softSkill: skills },
                       })
                     }
                     placeholder="Search soft skills (teamwork, communication...)"
@@ -511,8 +512,8 @@ export default function RegisterPage() {
                         <span className="mr-2">💡</span>
                         AI Advisor Insights:
                       </h3>
-                      <div className="prose prose-sm max-w-none text-[#1a1a1a] whitespace-pre-wrap leading-relaxed">
-                        {aiPreview.careerRecommendation}
+                      <div className="prose prose-sm max-w-none text-[#1a1a1a] leading-relaxed">
+                        <ReactMarkdown>{aiPreview.careerRecommendation}</ReactMarkdown>
                       </div>
                     </div>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connection';
-import { Student } from '@/lib/mongodb/models/Student';
+import { Student } from '@/lib/mongodb/models';
 
 // GET /api/students/[id]/courses - Lấy danh sách courses của student
 export async function GET(

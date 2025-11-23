@@ -31,8 +31,8 @@ interface StudentDashboardProps {
       general: Record<string, number>;
     };
     interests: string[];
-    itSkills?: string[]; // IT skills from registration
-    softSkills?: string[]; // Soft skills from registration
+    itSkill?: string[]; // IT skills from registration
+    softSkill?: string[]; // Soft skills from registration
   };
   hotCareers: Array<{
     id: string;
@@ -56,21 +56,21 @@ interface StudentDashboardProps {
 }
 
 // biểu đồ kỹ năng
-function SkillsChart({ technical = {}, general = {} }: { technical?: Record<string, number>, general?: Record<string, number> }) {
-  const technicalSkills = Object.keys(technical);
-  const generalSkills = Object.keys(general);
+function SkillsChart({ technical = {}, general = {} }: { technical?: Record<string, number> | string[], general?: Record<string, number> | string[] }) {
+  const technicalSkills = Array.isArray(technical) ? technical : Object.keys(technical || {});
+  const generalSkills = Array.isArray(general) ? general : Object.keys(general || {});
 
   return (
     <div className="space-y-6">
       {technicalSkills.length > 0 && (
         <div>
           <h4 className="text-sm font-bold text-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
             Technical Skills
           </h4>
           <div className="flex flex-wrap gap-2">
             {technicalSkills.map((skill) => (
-              <span key={skill} className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 hover:bg-blue-100 transition-colors cursor-default">
+              <span key={skill} className="px-4 py-2 bg-orange-50 text-orange-700 rounded-full text-sm font-medium border border-orange-100 hover:bg-orange-100 transition-colors cursor-default">
                 {skill}
               </span>
             ))}
@@ -155,7 +155,7 @@ export default function StudentDashboard({ student, hotCareers, currentRoadmap }
               <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">📊</span>
               Skills Profile
             </h3>
-            <SkillsChart technical={student.skills.technical} general={student.skills.general} />
+            <SkillsChart technical={student.itSkill} general={student.softSkill} />
           </div>
         </div>
 

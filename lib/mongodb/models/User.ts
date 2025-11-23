@@ -55,9 +55,5 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Clear any cached model to ensure schema updates
-if (mongoose.models.User) {
-  delete mongoose.models.User;
-}
-
-export const User: Model<IUser> = mongoose.model<IUser>('User', UserSchema);
+// Use existing model if available to prevent overwriting
+export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

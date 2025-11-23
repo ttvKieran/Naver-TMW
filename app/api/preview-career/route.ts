@@ -6,8 +6,8 @@ const GENERATION_TASK_URL = process.env.NCP_CLOVASTUDIO_TUNING_ENDPOINT ||
 const HCX_007_URL = 'https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007';
 
 interface PreviewRequest {
-  itSkills: string[];
-  softSkills: string[];
+  itSkill: string[];
+  softSkill: string[];
   fullName: string;
   currentSemester?: number;
   gpa?: number;
@@ -15,9 +15,9 @@ interface PreviewRequest {
 }
 
 // Helper: Call Generation Task AI
-async function callGenerationTask(itSkills: string[], softSkills: string[]): Promise<string> {
+async function callGenerationTask(itSkill: string[], softSkill: string[]): Promise<string> {
   const systemPrompt = 'speak in English';
-  const userPrompt = `Given the following IT skills: ${itSkills.join(', ')} and Soft skills: ${softSkills.join(', ')}, the job role`;
+  const userPrompt = `Given the following IT skills: ${itSkill.join(', ')} and Soft skills: ${softSkill.join(', ')}, the job role`;
 
   const response = await fetch(GENERATION_TASK_URL, {
     method: 'POST',
@@ -83,8 +83,8 @@ Be encouraging, specific, and actionable.`;
 
   const userPrompt = `Student Profile:
 - Name: ${studentInfo.fullName}
-- IT Skills: ${studentInfo.itSkills.join(', ')}
-- Soft Skills: ${studentInfo.softSkills.join(', ')}
+- IT Skills: ${studentInfo.itSkill.join(', ')}
+- Soft Skills: ${studentInfo.softSkill.join(', ')}
 ${studentInfo.interests ? `- Interests: ${studentInfo.interests.join(', ')}` : ''}
 ${studentInfo.currentSemester ? `- Current Semester: ${studentInfo.currentSemester}` : ''}
 ${studentInfo.gpa ? `- GPA: ${studentInfo.gpa}/4.0` : ''}
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
   try {
     const data: PreviewRequest = await request.json();
 
-    if (!data.itSkills || data.itSkills.length === 0) {
+    if (!data.itSkill || data.itSkill.length === 0) {
       return NextResponse.json(
         { error: 'IT skills are required' },
         { status: 400 }
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Predict career
     console.log('Predicting career...');
-    const predictedCareer = await callGenerationTask(data.itSkills, data.softSkills || []);
+    const predictedCareer = await callGenerationTask(data.itSkill, data.softSkill || []);
     console.log('Predicted career:', predictedCareer);
 
     // Step 2: Get career recommendation

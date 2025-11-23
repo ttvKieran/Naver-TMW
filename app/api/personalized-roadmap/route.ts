@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connection';
 import { PersonalizedRoadmap } from '@/lib/mongodb/models';
+import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,6 +13,13 @@ export async function GET(request: NextRequest) {
     if (!studentId) {
       return NextResponse.json(
         { error: 'studentId parameter required' },
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return NextResponse.json(
+        { error: 'Invalid studentId format' },
         { status: 400 }
       );
     }

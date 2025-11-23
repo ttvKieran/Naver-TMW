@@ -6,15 +6,15 @@ const GENERATION_TASK_URL = process.env.NCP_CLOVASTUDIO_TUNING_ENDPOINT ||
   'https://clovastudio.stream.ntruss.com/v2/tasks/00vpqbzj/chat-completions';
 
 interface GenerationTaskRequest {
-  itSkills: string[];
-  softSkills: string[];
+  itSkill: string[];
+  softSkill: string[];
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { itSkills, softSkills }: GenerationTaskRequest = await request.json();
+    const { itSkill, softSkill }: GenerationTaskRequest = await request.json();
 
-    if (!itSkills || !softSkills || itSkills.length === 0) {
+    if (!itSkill || !softSkill || itSkill.length === 0) {
       return NextResponse.json(
         { error: 'IT skills and Soft skills are required' },
         { status: 400 }
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare the prompt for CLOVA tuned model
     const systemPrompt = 'speak in English';
-    const userPrompt = `Given the following IT skills: ${itSkills.join(', ')} and Soft skills: ${softSkills.join(', ')}, the job role`;
+    const userPrompt = `Given the following IT skills: ${itSkill.join(', ')} and Soft skills: ${softSkill.join(', ')}, the job role`;
 
     const requestBody = {
       messages: [

@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import connectDB from '@/lib/mongodb/connection';
-import { User } from '@/lib/mongodb/models/User';
-import { Student } from '@/lib/mongodb/models/Student';
+import { User, Student } from '@/lib/mongodb/models';
 import RoadmapViewer from '@/components/RoadmapViewer';
 
 async function getStudentData(email: string) {

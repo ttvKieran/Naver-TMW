@@ -69,7 +69,7 @@ npm run dev
 ### Next.js APIs
 
 1. **POST /api/generation-task**
-   - Input: `{ itSkills: string[], softSkills: string[] }`
+   - Input: `{ itSkill: string[], softSkill: string[] }`
    - Output: `{ predictedCareer: string, fullResponse: string }`
    - Mô tả: Gọi CLOVA Generation Task để dự đoán ngành nghề
 
@@ -195,7 +195,7 @@ MONGODB_URI=your_mongodb_connection_string
 # Test Generation Task
 curl -X POST http://localhost:3000/api/generation-task ^
   -H "Content-Type: application/json" ^
-  -d "{\"itSkills\": [\"Python\", \"Machine Learning\"], \"softSkills\": [\"problem-solving\"]}"
+  -d "{\"itSkill\": [\"Python\", \"Machine Learning\"], \"softSkill\": [\"problem-solving\"]}"
 
 # Test Career Recommendation  
 curl -X POST http://localhost:3000/api/career-recommendation ^

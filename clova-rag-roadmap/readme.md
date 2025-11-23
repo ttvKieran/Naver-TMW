@@ -44,6 +44,7 @@ clova-rag-roadmap/
 ├─ .env.local                 # Chứa NCP_API_KEY
 └─ README.md
 ```
+
 ## 2. Chuẩn bị môi trường
 
 ### 2.1. Tạo virtualenv và cài dependency
@@ -53,91 +54,119 @@ cd clova-rag-roadmap
 
 # (tuỳ chọn) tạo virtualenv
 python -m venv .venv
-./.venv/Scripts/activate
+[activate](http://_vscodecontentref_/0)
 
 # cài package
 pip install -r requirements.txt
 ```
-
-### 2.2. Cấu hình `NCP_API_KEY`
-
-Tạo file `.env.local` trong thư mục `clova-rag-roadmap/` với nội dung:
+### 2.2. Cấu hình NCP_API_KEY
+Tạo file .env.local trong thư mục clova-rag-roadmap/:
 
 ```bash
 NCP_API_KEY=YOUR_CLOVA_STUDIO_API_KEY
 ```
-
 ## 3. Chuẩn bị dữ liệu
-
-### 3.1. Roadmap nghề (`data/jobs/*.json`)
+### 3.1. Roadmap nghề (data/jobs/*.json)
 
 Mỗi file JSON mô tả một lộ trình nghề cụ thể, ví dụ:
 
-- `big_data_engineer.json`
-- `machine_learning.json`
-- `full_stack_developer.json`
-- ...
-
+big_data_engineer.json
+machine_learning.json
+full_stack_developer.json
+...
 ### 3.2. Flatten roadmap → CSV
-
 Nếu chỉnh sửa roadmap JSON, chạy lại script flatten:
-
 ```bash
 cd clova-rag-roadmap
 python scripts/flatten_roadmap.py
 ```
-
-Script sẽ sinh lại các file trong `data/flatten_roadmaps/`.
+Script sẽ sinh lại các file trong data/flatten_roadmaps/.
 
 ### 3.3. Sinh embedding cho roadmap
-
 ```bash
 cd clova-rag-roadmap
 python scripts/embed_roadmap.py
 ```
+Script gọi CLOVA Embedding API và lưu vào data/roadmap_embeddings/*_embeddings.csv.
 
-Script gọi CLOVA Embedding API và lưu vào `data/roadmap_embeddings/*_embeddings.csv`.
+### 3.4. Personalize API (gắn check + personalization)
 
-## 4. Personalize API (gắn `check` + `personalization`)
-
-Chạy FastAPI cho `personalize_api.py`:
-
+Chạy FastAPI cho personalize_api.py:
 ```bash
 cd clova-rag-roadmap
-uvicorn app.personalize_api:app --port 8080
+uvicorn app.personalize_api:app --reload --host 0.0.0.0 --port 8080
 ```
+Mở docs: http://127.0.0.1:8080/docs
 
-Mở docs tại:
-
-http://127.0.0.1:8080/docs
-
-Endpoint chính:
-
-- `POST /roadmap/personalized`
+Endpoint chính: `POST /roadmap/personalized`
 
 Body mẫu:
-
 ```json
 {
   "user_id": "user_001",
   "jobname": "big data engineer"
 }
 ```
+## 4. Luồng xử lý
 
-Luồng xử lý:
+### 4.1. Load dữ liệu
+  - Đọc canonical roadmap từ `data/jobs/big_data_engineer.json`.
+  - Đọc profile/PROFILE từ `data/users/users.json` (đã normalize).
 
-1. Load roadmap gốc từ `data/jobs/big_data_engineer.json`.
-2. Build PROFILE từ `data/users/users.json`.
-3. Gửi PROFILE + CANONICAL ROADMAP JSON vào HCX-007.
-4. Model trả về bản roadmap đầy đủ, đã gắn:
-   - `check: true/false`
-   - `personalization: { status, priority, personalized_description, reason }`
-5. API merge kết quả vào canonical, đảm bảo không mất stage/area/item nào.
+### 4.2. Tạo payload cho HCX-007
+  - Payload gồm: `{ "profile": PROFILE, "canonical_roadmap": ROADMAP, "instruction": "Gắn các trường check + personalization cho từng item; KHÔNG thay đổi cấu trúc roadmap; trả về roadmap đầy đủ." }`
+  - Quy định output: mỗi `item` phải có thêm:
+    - `check: boolean`
+    - `personalization: { status, priority, personalized_description, reason }`
 
-## 5. Định dạng `users.json`
+### 4.3. Gọi HCX-007
+  - Gửi payload đến HCX-007 chat/completions.
+  - Nhận response: roadmap đầy đủ với các trường bổ sung (model trả về whole roadmap JSON).
 
-Ví dụ một user sau khi được `normalize_user`:
+### 4.4. Merge kết quả vào canonical
+  - Nguyên tắc:
+    - Không xóa/di chuyển bất kỳ `stage/area/item` nào.
+    - So khớp item dựa trên `id` (nếu có) hoặc đường dẫn vị trí (stage/area/title). Nếu không chính xác, dùng cosine-similarity giữa title/description để map.
+    - Với mỗi item canonical: nếu model trả về personalization, gán các trường mới; nếu không, thêm mặc định:
+    ```json
+    {
+      "check": false,
+      "personalization": {
+        "status": "not_personalized",
+        "priority": null,
+        "personalized_description": "",
+        "reason": ""
+      }
+    }
+    ```
+    - Giữ nguyên thứ tự và các trường hiện có trong canonical.
 
+### 4.5. Trả/luu kết quả
+  - API trả về roadmap merged (JSON) hoặc lưu vào `data/...`.
+  - Ghi log các item không khớp để review/tune prompt.
+
+- Ví dụ payload (tóm tắt):
+  ```json
+  {
+    "profile": { /* PROFILE */ },
+    "canonical_roadmap": { /* ROADMAP */ },
+    "instruction": "Gắn field check + personalization lên từng item; giữ nguyên schema; trả về toàn bộ roadmap JSON."
+  }
+  ```
+
+Merging pseudocode (tóm tắt):
+- iterate canonical.stages ->
+  - iterate area.items ->
+   - find corresponding item in model_response by id/path/title
+   - if found: item.update(model_fields)
+   - else: item.add_default_personalization()
+- return canonical_merged
+
+Ghi chú: đảm bảo prompt cho HCX-007 rõ ràng về schema và yêu cầu trả về JSON thuần để tránh mất cấu trúc.
+
+## 5. Định dạng users.json
+
+Ví dụ một user sau khi được normalize_user:
 ```json
 {
   "user_id": "user_001",
@@ -165,7 +194,5 @@ Ví dụ một user sau khi được `normalize_user`:
   "meta": {}
 }
 ```
-
-`search_api` và `personalize_api` đều dựa vào schema đã chuẩn hoá này.
-
-`scripts/test.json` là ví dụ roadmap machine learning đã được cá nhân hóa.
+search_api và personalize_api đều dựa vào schema đã chuẩn hoá này.
+test.json là ví dụ roadmap machine learning cá nhân hóa.

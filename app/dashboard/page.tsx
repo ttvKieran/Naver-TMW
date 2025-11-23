@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
 import Navbar from '@/components/Navbar';
+import connectDB from '@/lib/mongodb/connection';
+import { Student, Career, PersonalizedRoadmap } from '@/lib/mongodb/models';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -40,18 +42,15 @@ export default async function DashboardPage() {
   let currentCareerId: string | null = null;
 
   try {
-    const studentRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students/${studentId}`,
-      { cache: 'no-store' }
-    );
-    const studentData = await studentRes.json();
+    await connectDB();
 
-    if (studentData.student) {
-      dbStudent = studentData.student;
+    // 1. Fetch Student
+    dbStudent = await Student.findById(studentId).lean();
 
+    if (dbStudent) {
       student = {
         id: dbStudent.studentCode,
-        studentDbId: dbStudent._id,
+        studentDbId: dbStudent._id.toString(),
         name: dbStudent.fullName,
         university: dbStudent.university || 'Unknown University',
         major: dbStudent.major || 'Computer Science',
@@ -76,8 +75,8 @@ export default async function DashboardPage() {
         },
         skills: {} as Record<string, number>,
         interests: dbStudent.interests || [],
-        itSkills: dbStudent.itSkill || [],
-        softSkills: dbStudent.softSkill || [],
+        itSkill: dbStudent.itSkill || [],
+        softSkill: dbStudent.softSkill || [],
       };
 
       // Process skills
@@ -116,15 +115,19 @@ export default async function DashboardPage() {
       }
     }
 
-    // Fetch careers
-    const careersRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`,
-      { cache: 'no-store' }
-    );
-    const careersData = await careersRes.json();
-    hotCareers = careersData.careers || [];
+    // 2. Fetch Careers (Limit to top 6 trending)
+    const careersData = await Career.find({ isActive: true })
+      .select('careerId title category description overview popularity')
+      .sort({ popularity: -1 })
+      .lean();
+    
+    hotCareers = careersData.map((c: any) => ({
+      ...c,
+      _id: c._id.toString(),
+      id: c.careerId
+    })) || [];
 
-    const currentCareer = careersData.careers?.find(
+    const currentCareer = hotCareers.find(
       (c: any) => c.title.toLowerCase() === student?.actualCareer?.toLowerCase()
     );
 
@@ -132,24 +135,32 @@ export default async function DashboardPage() {
       currentCareerId = currentCareer._id;
     }
 
-    // Fetch personalized roadmap
+    // 3. Fetch Personalized Roadmap
     if (dbStudent) {
       try {
-        const personalizedRoadmapRes = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/personalized-roadmap?studentId=${
-dbStudent._id}`,
-          { cache: 'no-store' }
-        );
+        const roadmapData = await PersonalizedRoadmap.aggregate([
+          { $match: { studentId: dbStudent._id, isActive: true } },
+          { $sort: { generatedAt: -1 } },
+          { $limit: 1 },
+          { 
+            $project: { 
+              careerName: 1, 
+              description: 1, 
+              generatedAt: 1, 
+              stagesCount: { $size: { $ifNull: ["$stages", []] } } 
+            } 
+          }
+        ]);
 
-        if (personalizedRoadmapRes.ok) {
-          const personalizedData = await personalizedRoadmapRes.json();
-          const roadmap = personalizedData.roadmap;
+        const roadmap = roadmapData[0];
+
+        if (roadmap) {
           currentRoadmap = {
-            _id: roadmap._id,
+            _id: roadmap._id.toString(),
             careerName: roadmap.careerName,
             description: roadmap.description,
             generatedAt: roadmap.generatedAt,
-            stagesCount: roadmap.stages?.length || 0,
+            stagesCount: roadmap.stagesCount || 0,
           };
         }
       } catch (err) {

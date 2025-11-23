@@ -240,6 +240,18 @@ export default async function RoadmapPage({
     isPersonalized // Pass this flag to client
   };
 
+  if (!roadmap) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Roadmap Content Not Found</h2>
+          <p className="text-muted-foreground mb-4">We found the career but couldn't load the roadmap content.</p>
+          <a href="/dashboard" className="text-primary hover:underline">Back to Dashboard</a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <RoadmapClient 
       career={transformedCareer} 

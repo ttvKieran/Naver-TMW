@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connection';
-import { PersonalizedRoadmap } from '@/lib/mongodb/models/PersonalizedRoadmap';
+import { PersonalizedRoadmap } from '@/lib/mongodb/models';
 
 // PATCH /api/roadmap-progress - Cập nhật trạng thái check/uncheck của item
 export async function PATCH(request: NextRequest) {

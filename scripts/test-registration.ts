@@ -21,8 +21,8 @@ async function testRegistration() {
     
     // Skills
     skills: {
-      itSkills: ['javascript', 'python'],
-      softSkills: ['teamwork', 'communication'],
+      itSkill: ['javascript', 'python'],
+      softSkill: ['teamwork', 'communication'],
       technicalSkills: {
         javascript: 6,
         python: 5,
@@ -43,7 +43,7 @@ async function testRegistration() {
     email: testUser.email,
     name: testUser.name,
     fullName: testUser.fullName,
-    skills: testUser.skills.itSkills,
+    skills: testUser.skills.itSkill,
   });
 
   try {

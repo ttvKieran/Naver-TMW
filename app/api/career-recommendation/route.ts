@@ -7,8 +7,8 @@ interface CareerRecommendationRequest {
   studentInfo: {
     fullName: string;
     skills: {
-      itSkills: string[];
-      softSkills: string[];
+      itSkill: string[];
+      softSkill: string[];
     };
     interests?: string[];
     currentSemester?: number;
@@ -43,8 +43,8 @@ Be encouraging, specific, and actionable in your advice.`;
 
     const userPrompt = `Student Profile:
 - Name: ${studentInfo.fullName}
-- IT Skills: ${studentInfo.skills.itSkills.join(', ')}
-- Soft Skills: ${studentInfo.skills.softSkills.join(', ')}
+- IT Skills: ${studentInfo.skills.itSkill.join(', ')}
+- Soft Skills: ${studentInfo.skills.softSkill.join(', ')}
 ${studentInfo.interests ? `- Interests: ${studentInfo.interests.join(', ')}` : ''}
 ${studentInfo.currentSemester ? `- Current Semester: ${studentInfo.currentSemester}` : ''}
 ${studentInfo.gpa ? `- GPA: ${studentInfo.gpa}/4.0` : ''}

@@ -196,6 +196,10 @@ const RoadmapSchema = new Schema<IRoadmap>(
                 requiredSkills: [{ tag: String, min_level: Number }],
                 estimatedHours: Number,
                 skillTags: [String],
+                orderIndex: {
+                  type: Number,
+                  required: true,
+                },
               },
             ],
           },

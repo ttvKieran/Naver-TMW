@@ -22,8 +22,8 @@ export default function ProfilePage() {
     major: '',
     gpa: 0,
     currentSemester: 1,
-    itSkills: [] as string[],
-    softSkills: [] as string[],
+    itSkill: [] as string[],
+    softSkill: [] as string[],
     interests: [] as string[],
   });
 
@@ -58,8 +58,8 @@ export default function ProfilePage() {
           major: student.major || '',
           gpa: student.academic?.gpa || 0,
           currentSemester: student.academic?.currentSemester || 1,
-          itSkills: student.itSkill || [],
-          softSkills: student.softSkill || [],
+          itSkill: student.itSkill || [],
+          softSkill: student.softSkill || [],
           interests: student.interests || [],
         });
       }
@@ -84,8 +84,8 @@ export default function ProfilePage() {
           major: formData.major,
           gpa: formData.gpa,
           currentSemester: formData.currentSemester,
-          itSkill: formData.itSkills,
-          softSkill: formData.softSkills,
+          itSkill: formData.itSkill,
+          softSkill: formData.softSkill,
           interests: formData.interests,
         }),
       });
@@ -346,9 +346,9 @@ export default function ProfilePage() {
                   <label className="text-sm font-medium text-muted-foreground">IT Skills</label>
                   <SearchableSkillInput
                     skillType="it"
-                    selectedSkills={formData.itSkills}
+                    selectedSkills={formData.itSkill}
                     onSkillsChange={(skills) =>
-                      setFormData({ ...formData, itSkills: skills })
+                      setFormData({ ...formData, itSkill: skills })
                     }
                     placeholder="Add technical skills (e.g. React, Python)..."
                   />
@@ -358,9 +358,9 @@ export default function ProfilePage() {
                   <label className="text-sm font-medium text-muted-foreground">Soft Skills</label>
                   <SearchableSkillInput
                     skillType="soft"
-                    selectedSkills={formData.softSkills}
+                    selectedSkills={formData.softSkill}
                     onSkillsChange={(skills) =>
-                      setFormData({ ...formData, softSkills: skills })
+                      setFormData({ ...formData, softSkill: skills })
                     }
                     placeholder="Add soft skills (e.g. Leadership, Communication)..."
                   />

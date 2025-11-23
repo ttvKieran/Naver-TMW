@@ -112,7 +112,7 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            {studentId && (
+            {/* {studentId && (
               <button
                 onClick={handleRegenerate}
                 disabled={isRegenerating}
@@ -135,7 +135,7 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
                   </>
                 )}
               </button>
-            )}
+            )} */}
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-bold border border-primary/20">
               {career.duration}
             </span>

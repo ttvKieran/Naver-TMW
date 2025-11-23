@@ -111,9 +111,21 @@ export default function MyRoadmapPage() {
 
     // Update UI optimistically
     const updatedRoadmap = { ...roadmap };
-    const item = updatedRoadmap.stages[stageIdx].areas[areaIdx].items[itemIdx];
-    item.check = !item.check;
+    const stage = updatedRoadmap.stages[stageIdx];
+    const area = stage.areas[areaIdx];
+    const item = area.items[itemIdx];
+    
+    const newCheckState = !item.check;
+    item.check = newCheckState;
     setRoadmap(updatedRoadmap);
+
+    // Sync with selectedDetail if it's the same item
+    if (selectedDetail && 
+        selectedDetail.stageId === stage.id && 
+        selectedDetail.areaId === area.id && 
+        selectedDetail.itemId === (item.id || item.itemId)) {
+      setSelectedDetail(prev => prev ? { ...prev, check: newCheckState } : null);
+    }
 
     // Save to database
     try {
@@ -125,14 +137,45 @@ export default function MyRoadmapPage() {
           stageIdx,
           areaIdx,
           itemIdx,
-          checked: item.check,
+          checked: newCheckState,
         }),
       });
     } catch (err) {
       console.error('Failed to save progress:', err);
       // Revert on error
-      item.check = !item.check;
+      item.check = !newCheckState;
       setRoadmap({ ...updatedRoadmap });
+      
+      // Revert selectedDetail
+      if (selectedDetail && 
+          selectedDetail.stageId === stage.id && 
+          selectedDetail.areaId === area.id && 
+          selectedDetail.itemId === (item.id || item.itemId)) {
+        setSelectedDetail(prev => prev ? { ...prev, check: !newCheckState } : null);
+      }
+    }
+  };
+
+  const handleMarkAsComplete = () => {
+    if (!selectedDetail || !roadmap) return;
+
+    // Find indices
+    for (let s = 0; s < roadmap.stages.length; s++) {
+      const stage = roadmap.stages[s];
+      if (stage.id === selectedDetail.stageId) {
+        for (let a = 0; a < stage.areas.length; a++) {
+          const area = stage.areas[a];
+          if (area.id === selectedDetail.areaId) {
+            for (let i = 0; i < area.items.length; i++) {
+              const item = area.items[i];
+              if ((item.id || item.itemId) === selectedDetail.itemId) {
+                handleToggleItem(s, a, i);
+                return;
+              }
+            }
+          }
+        }
+      }
     }
   };
 
@@ -332,8 +375,15 @@ export default function MyRoadmapPage() {
                         <button className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSelectedDetail(null)}>
                           Close
                         </button>
-                        <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm">
-                          Mark as Complete
+                        <button 
+                          onClick={handleMarkAsComplete}
+                          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm ${
+                            selectedDetail.check 
+                              ? 'bg-green-600 text-white hover:bg-green-700' 
+                              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          }`}
+                        >
+                          {selectedDetail.check ? 'Completed' : 'Mark as Complete'}
                         </button>
                       </div>
                     </div>

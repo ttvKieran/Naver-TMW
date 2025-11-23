@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connection';
-import { PersonalizedRoadmap } from '@/lib/mongodb/models/PersonalizedRoadmap';
+import { PersonalizedRoadmap } from '@/lib/mongodb/models';
 
 export async function GET(
   request: NextRequest,

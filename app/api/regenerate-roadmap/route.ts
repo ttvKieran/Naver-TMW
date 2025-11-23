@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connection';
-import { Student } from '@/lib/mongodb/models/Student';
-import { PersonalizedRoadmap } from '@/lib/mongodb/models/PersonalizedRoadmap';
+import { Student, PersonalizedRoadmap } from '@/lib/mongodb/models';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8001';
+const PYTHON_API_URL = process.env.PYTHON_API_URL || 'https://clovax-456m.vercel.app';
 const HCX_007_URL = 'https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007';
 const NCP_API_KEY = process.env.NCP_API_KEY;
 
@@ -104,12 +103,12 @@ Provide career recommendations for this student.`;
 }
 
 // Helper: Call Generation Task AI (tuned model) - same as register
-async function callGenerationTask(itSkills: string[], softSkills: string[]): Promise<string> {
+async function callGenerationTask(itSkill: string[], softSkill: string[]): Promise<string> {
   const GENERATION_TASK_URL = process.env.NCP_CLOVASTUDIO_TUNING_ENDPOINT || 
     'https://clovastudio.stream.ntruss.com/v2/tasks/00vpqbzj/chat-completions';
   
   const systemPrompt = 'speak in English';
-  const userPrompt = `Given the following IT skills: ${itSkills.join(', ')} and Soft skills: ${softSkills.join(', ')}, the job role`;
+  const userPrompt = `Given the following IT skills: ${itSkill.join(', ')} and Soft skills: ${softSkill.join(', ')}, the job role`;
 
   const response = await fetch(GENERATION_TASK_URL, {
     method: 'POST',
@@ -190,7 +189,7 @@ export async function POST(request: NextRequest) {
     console.log('Step 1: Predicting career using Generation Task AI...');
     let predictedCareer: string;
     try {
-      predictedCareer = await callGenerationTask(student.itSkills, student.softSkills);
+      predictedCareer = await callGenerationTask(student.itSkill, student.softSkill);
       console.log('✅ Career predicted:', predictedCareer);
     } catch (error) {
       console.error('Generation Task error:', error);
@@ -210,92 +209,46 @@ export async function POST(request: NextRequest) {
     }
 
     // Update student với career mới
-    student.career.targetCareerId = mapCareerToJobFile(predictedCareer);
+    student.career.targetCareerID = mapCareerToJobFile(predictedCareer);
     student.career.actualCareer = predictedCareer;
     student.career.targetConfidence = 0.85;
     (student as any).aiCareerRecommendation = careerRecommendation;
 
-    // Step 3: Sync user to clova-rag-roadmap via sync-user API
-    console.log('Step 3: Syncing user to clova-rag-roadmap...');
-    const clovaUserData = {
-      user_id: student.studentCode,
-      full_name: student.fullName,
-      current_semester: student.academic.currentSemester,
-      gpa: student.academic.gpa,
-      target_career_id: student.career.targetCareerId,
-      actual_career: student.career.actualCareer,
-      time_per_week_hours: student.availability.timePerWeekHours,
-      it_skills: student.itSkills,
-      soft_skills: student.softSkills,
-      skills: {
-        technical: student.skills.technical instanceof Map 
-          ? Object.fromEntries(student.skills.technical) 
-          : (student.skills.technical || {}),
-        general: student.skills.general instanceof Map 
-          ? Object.fromEntries(student.skills.general) 
-          : (student.skills.general || {}),
-      },
-      interests: student.interests,
-      projects: student.projects,
-      academic: {
-        current_semester: student.academic.currentSemester,
-        gpa: student.academic.gpa,
-        courses: student.academic.courses.map((c) => ({
-          code: c.code,
-          name: c.name,
-          grade: c.grade,
-        })),
-      },
-      career: {
-        target_career_id: student.career.targetCareerId,
-        actual_career: student.career.actualCareer,
-        target_confidence: student.career.targetConfidence,
-      },
-      availability: {
-        time_per_week_hours: student.availability.timePerWeekHours,
-      },
-    };
+    // Save student with updated career info
+    await student.save();
+    console.log('✅ Student career updated in database');
 
-    const syncResponse = await fetch(`http://localhost:3000/api/sync-user`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(clovaUserData),
-    });
-
-    if (!syncResponse.ok) {
-      const errorData = await syncResponse.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(`User sync failed: ${errorData.error || syncResponse.statusText}`);
-    }
+    // Step 3: Call Python API to generate personalized roadmap
+    // Note: Python API will read student data directly from MongoDB
+    console.log('Step 3: Generating personalized roadmap...');
+    console.log('🔄 Calling Python API:', `${PYTHON_API_URL}/roadmap/personalized`);
+    console.log('📦 Request body:', { user_id: student._id.toString(), jobname: student.career.actualCareer });
     
-    console.log('✅ User synced to users.json');
-    // Wait for file system to update
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Step 4: Call Python API to generate personalized roadmap
-    console.log('Step 4: Generating personalized roadmap...');
     const roadmapRes = await fetch(`${PYTHON_API_URL}/roadmap/personalized`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id: student.studentCode,
-        jobname: student.career.targetCareerId,
+        user_id: student._id.toString(),
+        jobname: student.career.actualCareer || student.career.targetCareerID,
       }),
     });
 
     if (!roadmapRes.ok) {
-      throw new Error(`Python API error: ${roadmapRes.status}`);
+      const errorText = await roadmapRes.text();
+      console.error('❌ Python API Error:', roadmapRes.status, errorText);
+      throw new Error(`Python API error (${roadmapRes.status}): ${errorText}`);
     }
 
     const roadmapData = await roadmapRes.json();
     console.log(`✅ Generated roadmap with ${roadmapData.stages?.length || 0} stages`);
 
-    // Step 5: Save PersonalizedRoadmap to MongoDB
-    console.log('Step 5: Saving personalized roadmap to database...');
+    // Step 4: Save PersonalizedRoadmap to MongoDB
+    console.log('Step 4: Saving personalized roadmap to database...');
     
     // Delete old roadmap if exists
     await PersonalizedRoadmap.deleteMany({ studentId: student._id });
     
-    // Add orderIndex to stages if missing and map snake_case to camelCase
+    // Add orderIndex to stages if missing
     const processedStages = roadmapData.stages?.map((stage: any, index: number) => ({
       ...stage,
       orderIndex: stage.orderIndex ?? index,
@@ -305,10 +258,6 @@ export async function POST(request: NextRequest) {
         items: area.items?.map((item: any, itemIndex: number) => ({
           ...item,
           orderIndex: item.orderIndex ?? itemIndex,
-          personalization: item.personalization ? {
-            ...item.personalization,
-            personalizedDescription: item.personalization.personalized_description || item.personalization.personalizedDescription
-          } : undefined
         })),
       })),
     })) || [];
@@ -317,7 +266,7 @@ export async function POST(request: NextRequest) {
       studentId: student._id,
       roadmapId: null,
       
-      careerID: roadmapData.career_id || student.career.targetCareerId,
+      careerID: roadmapData.career_id || student.career.targetCareerID,
       careerName: roadmapData.career_name || student.career.actualCareer,
       
       description: roadmapData.description || `Personalized learning roadmap for ${student.career.actualCareer}`,
@@ -345,9 +294,6 @@ export async function POST(request: NextRequest) {
     
     await personalizedRoadmap.save();
     console.log('✅ Personalized roadmap saved with', personalizedRoadmap.stages.length, 'stages');
-
-    // Save student
-    await student.save();
 
     return NextResponse.json({
       success: true,

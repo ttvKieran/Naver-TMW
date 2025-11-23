@@ -1,8 +1,9 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import connectDB from '@/lib/mongodb/connection';
-import { User } from '@/lib/mongodb/models/User';
+import { User, Student } from '@/lib/mongodb/models';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -17,32 +18,63 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password required');
         }
 
-        await connectDB();
+        try {
+          await connectDB();
 
-        const user = await User.findOne({ email: credentials.email })
-          .populate('studentId')
-          .lean();
+          const user = await User.findOne({ email: credentials.email })
+            .populate('studentId')
+            .lean();
 
-        if (!user) {
-          throw new Error('Invalid email or password');
+          console.log('Auth - User found:', user?.email);
+          
+          if (!user) {
+            throw new Error('Invalid email or password');
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.passwordHash
+          );
+
+          if (!isPasswordValid) {
+            throw new Error('Invalid email or password');
+          }
+
+          // Handle student data resolution
+          let studentId = null;
+          let studentCode = null;
+          
+          if (user.studentId) {
+            // Check if populated (has studentCode)
+            if ((user.studentId as any).studentCode) {
+              studentId = (user.studentId as any)._id.toString();
+              studentCode = (user.studentId as any).studentCode;
+            } else {
+              // Not populated or missing code, try to fetch manually if it's an ID
+              const idStr = user.studentId.toString();
+              if (mongoose.Types.ObjectId.isValid(idStr)) {
+                const studentDoc = await Student.findById(idStr).select('studentCode').lean();
+                if (studentDoc) {
+                  studentId = studentDoc._id.toString();
+                  studentCode = studentDoc.studentCode;
+                }
+              }
+            }
+          }
+
+          console.log('Auth - Resolved student:', { studentId, studentCode });
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            studentId: studentId,
+            studentCode: studentCode,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          throw error;
         }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
-
-        if (!isPasswordValid) {
-          throw new Error('Invalid email or password');
-        }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          studentId: user.studentId?._id?.toString() || null,
-          studentCode: (user.studentId as any)?.studentCode || null,
-        };
       },
     }),
   ],
@@ -71,17 +103,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token.v2`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

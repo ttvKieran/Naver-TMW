@@ -1,13 +1,23 @@
+
+import os
 import json
 import uuid
 import re
 import copy
+from bson import ObjectId
+
 
 import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
+from pymongo import MongoClient
+from .search_api import BASE_DIR, NCP_API_KEY
 
-from .search_api import BASE_DIR, NCP_API_KEY, USERS
+# Kết nối MongoDB
+MONGO_URI = "mongodb+srv://tatruongvuptit:3rAzJ2rPTw9yXkBN@cluster.znzh1.mongodb.net/"
+mongo_client = MongoClient(MONGO_URI)
+db = mongo_client["career-advisor"]
+users_collection = db["users"]
 
 app = FastAPI()
 
@@ -17,6 +27,66 @@ JOB_NAME = "machine learning"
 CHAT_COMPLETIONS_API_URL = (
     "https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007"
 )
+
+
+def map_career_to_job_file(career_name: str) -> str:
+    """
+    Map career name to actual job file name.
+    """
+    career_lower = career_name.lower().strip().replace(" ", "_")
+    
+    # Direct mappings
+    direct_mappings = {
+        "information_technology": "full_stack_developer",
+        "software_engineer": "full_stack_developer",
+        "software_engineering": "full_stack_developer",
+        "web_developer": "full_stack_developer",
+        "frontend_developer": "full_stack_developer",
+        "backend_developer": "full_stack_developer",
+        "full_stack_developer": "full_stack_developer",
+        "data_analyst": "data_analyst",
+        "data_scientist": "data_scientist",
+        "data_science": "data_scientist",
+        "machine_learning_engineer": "machine_learning",
+        "machine_learning": "machine_learning",
+        "ml_engineer": "machine_learning",
+        "ai_engineer": "machine_learning",
+        "big_data_engineer": "big_data_engineer",
+        "big_data": "big_data_engineer",
+        "cloud_architect": "cloud_architect",
+        "cloud_engineer": "cloud_architect",
+        "cloud_computing": "cloud_architect",
+        "devops_engineer": "cloud_architect",
+        "security_analyst": "information_security_analyst",
+        "cybersecurity_analyst": "information_security_analyst",
+        "information_security": "information_security_analyst",
+        "business_analyst": "business_intelligence_analyst",
+        "bi_analyst": "business_intelligence_analyst",
+        "business_intelligence": "business_intelligence_analyst",
+    }
+    
+    # Check direct mappings
+    if career_lower in direct_mappings:
+        return direct_mappings[career_lower]
+    
+    # Partial match fallback
+    if "data" in career_lower and "scien" in career_lower:
+        return "data_scientist"
+    if "data" in career_lower and "analy" in career_lower:
+        return "data_analyst"
+    if "machine" in career_lower or "learning" in career_lower or "ml" in career_lower:
+        return "machine_learning"
+    if "cloud" in career_lower:
+        return "cloud_architect"
+    if "security" in career_lower or "cyber" in career_lower:
+        return "information_security_analyst"
+    if "business" in career_lower and "intel" in career_lower:
+        return "business_intelligence_analyst"
+    if "big" in career_lower and "data" in career_lower:
+        return "big_data_engineer"
+    
+    # Default fallback
+    return "full_stack_developer"
 
 
 class PersonalizeRequest(BaseModel):
@@ -37,39 +107,77 @@ def load_canonical_roadmap(jobname: str = JOB_NAME) -> dict:
 def build_profile_text(user: dict) -> str:
     """
     Chuẩn hóa profile user thành text cho prompt.
-    Dựa trên normalize_user trong search_api.
+    Hỗ trợ cả schema cũ (snake_case) và schema mới (camelCase từ MongoDB).
     """
-    it_skills = ", ".join(user.get("it_skills", []))
-    soft_skills = ", ".join(user.get("soft_skills", []))
+    # IT Skills - hỗ trợ cả it_skills và itSkill
+    it_skills_list = user.get("itSkill") or user.get("it_skills", [])
+    it_skills = ", ".join(it_skills_list) if it_skills_list else ""
+    
+    # Soft Skills - hỗ trợ cả soft_skills và softSkill
+    soft_skills_list = user.get("softSkill") or user.get("soft_skills", [])
+    soft_skills = ", ".join(soft_skills_list) if soft_skills_list else ""
 
-    tech_skills_str = ", ".join(
-        f"{k}:{v}" for k, v in user.get("skills_technical", {}).items()
-    )
-    gen_skills_str = ", ".join(
-        f"{k}:{v}" for k, v in user.get("skills_general", {}).items()
-    )
+    # Technical & General skills - hỗ trợ cả 2 format
+    skills_obj = user.get("skills", {})
+    tech_skills_dict = skills_obj.get("technical") or user.get("skills_technical", {})
+    gen_skills_dict = skills_obj.get("general") or user.get("skills_general", {})
+    
+    # Convert Map to dict if needed
+    if hasattr(tech_skills_dict, 'items'):
+        tech_skills_str = ", ".join(f"{k}:{v}" for k, v in tech_skills_dict.items())
+    else:
+        tech_skills_str = str(tech_skills_dict) if tech_skills_dict else ""
+        
+    if hasattr(gen_skills_dict, 'items'):
+        gen_skills_str = ", ".join(f"{k}:{v}" for k, v in gen_skills_dict.items())
+    else:
+        gen_skills_str = str(gen_skills_dict) if gen_skills_dict else ""
 
-    courses = user.get("course_scores", [])
+    # Academic info
+    academic = user.get("academic", {})
+    current_semester = academic.get("currentSemester") or user.get("current_semester", "N/A")
+    gpa = academic.get("gpa") or user.get("gpa", "N/A")
+    
+    # Courses
+    courses = academic.get("courses") or user.get("course_scores", [])
     course_lines = []
     for c in courses:
         code = c.get("code")
         name = c.get("name")
         grade = c.get("grade")
-        course_lines.append(f"- {code} | {name}: {grade}/10")
-    scores_str = "\n".join(course_lines)
+        if code and name and grade is not None:
+            course_lines.append(f"- {code} | {name}: {grade}/10")
+    scores_str = "\n".join(course_lines) if course_lines else "No course data"
 
-    interests = ", ".join(user.get("interests", []))
-    projects = "\n".join(f"- {p}" for p in user.get("projects", []))
+    # Career info
+    career = user.get("career", {})
+    target_career_id = career.get("targetCareerID") or user.get("target_career_id", "N/A")
+    actual_career = career.get("actualCareer") or user.get("actual_career", "N/A")
+    
+    # Availability
+    availability = user.get("availability", {})
+    time_per_week = availability.get("timePerWeekHours") or user.get("time_per_week_hours", "N/A")
+
+    # Interests & Projects
+    interests_list = user.get("interests", [])
+    interests = ", ".join(interests_list) if interests_list else "None"
+    
+    projects_list = user.get("projects", [])
+    projects = "\n".join(f"- {p}" for p in projects_list) if projects_list else "No projects"
+
+    # Full name
+    full_name = user.get("fullName") or user.get("full_name", "N/A")
+    user_id = str(user.get("_id")) or user.get("user_id", "N/A")
 
     text = (
         "PROFILE:\n"
-        f"- user_id: {user.get('user_id')}\n"
-        f"- Họ tên: {user.get('full_name')}\n"
-        f"- current_semester: {user.get('current_semester')}\n"
-        f"- GPA (thang 4): {user.get('gpa')}\n"
-        f"- target_career_id: {user.get('target_career_id')}\n"
-        f"- actual_career: {user.get('actual_career')}\n"
-        f"- time_per_week_hours: {user.get('time_per_week_hours')}\n"
+        f"- user_id: {user_id}\n"
+        f"- Họ tên: {full_name}\n"
+        f"- current_semester: {current_semester}\n"
+        f"- GPA (thang 4): {gpa}\n"
+        f"- target_career_id: {target_career_id}\n"
+        f"- actual_career: {actual_career}\n"
+        f"- time_per_week_hours: {time_per_week}\n"
         f"- IT skills (label): {it_skills}\n"
         f"- Soft skills (label): {soft_skills}\n"
         f"- Technical skills (1-10): {tech_skills_str}\n"
@@ -349,25 +457,59 @@ def apply_personalization_to_canonical_roadmap(
 
 @app.post("/roadmap/personalized")
 async def get_personalized_roadmap(req: PersonalizeRequest):
-    """
-    Input:  { "user_id": "...", "jobname": "big data engineer" }
-    """
-    # Reload users from file to get latest data
-    from .search_api import load_users
-    users = load_users()
+    # Lấy user từ MongoDB hoặc student từ MongoDB
+    print(f"🔍 Looking for user_id: {req.user_id}")
     
-    user = users.get(req.user_id)
-    if not user:
+    # Thử tìm trong collection users trước
+    user = users_collection.find_one({"_id": ObjectId(req.user_id)})
+    student = None
+    
+    if user:
+        print(f"✅ Found in users collection: {user.get('email')}")
+        # Lấy student từ studentID
+        student_id = user.get("studentId") or user.get("studentID")
+        if student_id:
+            student = db["students"].find_one({"_id": ObjectId(student_id)})
+            if student:
+                print(f"✅ Found linked student: {student.get('fullName')}")
+    else:
+        # Nếu không tìm thấy trong users, thử tìm trực tiếp trong students
+        print("⚠️ Not found in users, trying students collection...")
+        student = db["students"].find_one({"_id": ObjectId(req.user_id)})
+        if student:
+            print(f"✅ Found in students collection: {student.get('fullName')}")
+            # Tìm user tương ứng
+            user_id = student.get("userId")
+            if user_id:
+                user = users_collection.find_one({"_id": ObjectId(user_id)})
+                if user:
+                    print(f"✅ Found linked user: {user.get('email')}")
+    
+    if not student and not user:
+        print(f"❌ User/Student not found for ID: {req.user_id}")
         return {"error": "Unknown user_id"}
 
-    jobname = (req.jobname or 'JOB_NAME').strip()
+    # Gộp thông tin user và student
+    profile = {}
+    if user:
+        profile.update(dict(user))
+    if student:
+        # Student data has priority
+        profile.update(dict(student))
+
+    jobname = (req.jobname or JOB_NAME).strip()
+    
+    # Map career name to job file name
+    job_file = map_career_to_job_file(jobname)
+    print(f"📁 Career '{jobname}' mapped to job file: '{job_file}'")
 
     try:
-        canonical_roadmap = load_canonical_roadmap(jobname)
+        canonical_roadmap = load_canonical_roadmap(job_file)
     except FileNotFoundError:
+        print(f"❌ Roadmap file not found for: {job_file}")
         return {"error": f"Roadmap file for job '{jobname}' not found"}
 
-    profile_text = build_profile_text(user)
+    profile_text = build_profile_text(profile)
     roadmap_json_str = json.dumps(canonical_roadmap, ensure_ascii=False, indent=2)
 
     user_prompt = (
@@ -381,7 +523,6 @@ async def get_personalized_roadmap(req: PersonalizeRequest):
     )
 
     raw_answer = call_clova_chat(SYSTEM_PROMPT, user_prompt)
-
     model_roadmap = extract_json_from_text(raw_answer)
 
     if isinstance(model_roadmap, dict) and "stages" in model_roadmap:

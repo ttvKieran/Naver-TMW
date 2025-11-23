@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb/connection';
-import { Student } from '@/lib/mongodb/models/Student';
+import { Student } from '@/lib/mongodb/models';
+import mongoose from 'mongoose';
 
 export async function GET(
   request: NextRequest,
@@ -10,6 +11,13 @@ export async function GET(
     await connectDB();
 
     const { id } = await params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: 'Invalid student ID format' },
+        { status: 400 }
+      );
+    }
 
     const student = await Student.findById(id).lean();
 

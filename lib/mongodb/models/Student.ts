@@ -12,6 +12,7 @@ export interface IStudent {
   university?: string;
   major?: string;
   careerGoals?: string;
+  aiCareerRecommendation?: string;
   
   // Academic Info
   academic: {
@@ -26,7 +27,7 @@ export interface IStudent {
   
   // Career Info
   career: {
-    targetCareerId: string;
+    targetCareerID: string;
     actualCareer: string;
     targetConfidence?: number;
   };
@@ -45,8 +46,8 @@ export interface IStudent {
   // Lists
   interests: string[];
   projects: string[];
-  itSkills: string[];
-  softSkills: string[];
+  itSkill: string[];
+  softSkill: string[];
   
   // Metadata
   meta?: {
@@ -84,6 +85,7 @@ const StudentSchema = new Schema<IStudent>(
     university: String,
     major: String,
     careerGoals: String,
+    aiCareerRecommendation: String,
 
     // Academic Info
     academic: {
@@ -98,7 +100,7 @@ const StudentSchema = new Schema<IStudent>(
 
     // Career Info
     career: {
-      targetCareerId: String,
+      targetCareerID: String,
       actualCareer: String,
       targetConfidence: Number
     },
@@ -117,8 +119,8 @@ const StudentSchema = new Schema<IStudent>(
     // Lists
     interests: [String],
     projects: [String],
-    itSkills: [String],
-    softSkills: [String],
+    itSkill: [String],
+    softSkill: [String],
 
     // Metadata
     meta: {
