@@ -41,7 +41,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           studentId: user.studentId?._id?.toString() || null,
-          studentCode: "B22DCCN918",
+          studentCode: (user.studentId as any)?.studentCode || null,
         };
       },
     }),

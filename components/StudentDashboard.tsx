@@ -349,8 +349,36 @@ export default function StudentDashboard({
         );
     }, [selectedCareerId, allRoadmaps]);
 
-    const handleProfileUpdate = (newData: any) => {
-        setStudent(newData);
+    const handleProfileUpdate = async (newData: any) => {
+        try {
+            // Optimistic update
+            setStudent(newData);
+            setIsEditing(false);
+
+            const response = await fetch(`/api/students/${newData._id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update profile');
+            }
+
+            const result = await response.json();
+            if (result.success) {
+                // Update with server response to ensure consistency
+                setStudent(result.student);
+            } else {
+                // Revert on failure (optional, but good practice)
+                console.error('Update failed:', result.error);
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            // Revert or show error
+        }
     };
 
     return (

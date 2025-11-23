@@ -1279,5 +1279,43 @@
     "availability": {
       "time_per_week_hours": 10
     }
+  },
+  {
+    "user_id": "692303374ee6fba2cb303328",
+    "full_name": "Tran Oi",
+    "current_semester": 1,
+    "gpa": 3.6,
+    "target_career_id": "full_stack_developer",
+    "actual_career": "Full Stack Developer",
+    "time_per_week_hours": 10,
+    "it_skills": [
+      "expressjs"
+    ],
+    "soft_skills": [
+      "ability to collaborate with multiple teams"
+    ],
+    "skills": {
+      "technical": {
+        "expressjs": 5
+      },
+      "general": {
+        "ability_to_collaborate_with_multiple_teams": 5
+      }
+    },
+    "interests": [],
+    "projects": [],
+    "academic": {
+      "current_semester": 1,
+      "gpa": 3.6,
+      "courses": []
+    },
+    "career": {
+      "target_career_id": "full_stack_developer",
+      "actual_career": "Full Stack Developer",
+      "target_confidence": 0.8
+    },
+    "availability": {
+      "time_per_week_hours": 10
+    }
   }
 ]

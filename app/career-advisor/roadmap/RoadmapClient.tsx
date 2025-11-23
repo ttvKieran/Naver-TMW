@@ -2,16 +2,50 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CareerRoadmapDiagram, { DiagramDetailSelection } from "@/components/CareerRoadmapDiagram";
 import type { RoadmapData } from "@/lib/roadmapGraph";
 
 interface RoadmapClientProps {
   career: any;
   roadmap: RoadmapData;
+  studentId?: string;
 }
 
-export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
+export default function RoadmapClient({ career, roadmap, studentId }: RoadmapClientProps) {
+  const router = useRouter();
   const [selectedDetail, setSelectedDetail] = useState<DiagramDetailSelection | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const handleRegenerate = async () => {
+    if (!studentId) return;
+    
+    try {
+      setIsRegenerating(true);
+      const response = await fetch('/api/regenerate-roadmap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId,
+          careerPath: career.title
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate roadmap');
+      }
+
+      // Refresh the page to show new data (if the page logic supports fetching personalized roadmap)
+      router.refresh();
+    } catch (error) {
+      console.error('Error regenerating roadmap:', error);
+      alert('Failed to regenerate roadmap. Please try again.');
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   const handleDetailSelect = useCallback((detail: DiagramDetailSelection | null) => {
     setSelectedDetail(detail);
@@ -76,6 +110,30 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            {studentId && (
+              <button
+                onClick={handleRegenerate}
+                disabled={isRegenerating}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isRegenerating ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Regenerating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Regenerate Roadmap
+                  </>
+                )}
+              </button>
+            )}
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-bold border border-primary/20">
               {career.duration}
             </span>

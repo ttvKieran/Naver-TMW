@@ -25,10 +25,10 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('invalid email or password.');
+        setError('Invalid email or password.');
       } else if (result?.ok) {
-        router.push('/dashboard');
-        router.refresh();
+        // Force a hard refresh to ensure session cookies are picked up
+        window.location.href = '/dashboard';
       }
     } catch (err) {
       setError('An error occurred, please try again!');

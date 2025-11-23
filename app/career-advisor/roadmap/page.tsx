@@ -3,6 +3,8 @@ import RoadmapClient from "./RoadmapClient";
 import type { RoadmapData, RoadmapStage, RoadmapArea, RoadmapItem } from "@/lib/roadmapGraph";
 import connectDB from "@/lib/mongodb/connection";
 import { Career, Roadmap } from "@/lib/mongodb/models";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // Helper to transform MongoDB Roadmap to RoadmapData
 function transformRoadmap(roadmapDoc: any): RoadmapData {
@@ -95,6 +97,9 @@ export default async function RoadmapPage({
 }: {
   searchParams: Promise<{ career?: string }>;
 }) {
+  const session = await getServerSession(authOptions);
+  const studentId = (session?.user as any)?.studentId;
+
   const params = await searchParams;
   const careerParam = params.career;
 
@@ -149,6 +154,10 @@ export default async function RoadmapPage({
   };
 
   return (
-    <RoadmapClient career={transformedCareer} roadmap={roadmap} />
+    <RoadmapClient 
+      career={transformedCareer} 
+      roadmap={roadmap} 
+      studentId={studentId}
+    />
   );
 }
