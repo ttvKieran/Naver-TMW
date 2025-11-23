@@ -71,7 +71,7 @@ export default async function Home() {
             </p>
 
             <div className="flex flex-wrap gap-4 pt-4">
-              <a href="/career-advisor" className="px-8 py-4 bg-foreground text-background rounded-2xl font-bold shadow-xl hover:scale-105 transition-transform duration-300 flex items-center gap-2">
+              <a href="/dashboard" className="px-8 py-4 bg-foreground text-background rounded-2xl font-bold shadow-xl hover:scale-105 transition-transform duration-300 flex items-center gap-2">
                 Path the Way
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
@@ -241,7 +241,7 @@ export default async function Home() {
               </div>
               <h3 className="text-2xl font-bold mb-2 text-foreground">Career Advisor</h3>
               <p className="text-muted-foreground text-sm mb-6">Take a survey with our AI counselor to discover careers that match your personality.</p>
-              <a href="/career-advisor" className="w-full py-3 rounded-xl bg-background border border-border text-center block font-semibold hover:bg-muted transition-colors text-foreground">Start Survey</a>
+              <a href="/dashboard" className="w-full py-3 rounded-xl bg-background border border-border text-center block font-semibold hover:bg-muted transition-colors text-foreground">Start Survey</a>
             </div>
           </div>
         </div>
