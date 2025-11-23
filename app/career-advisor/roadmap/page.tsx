@@ -6,33 +6,55 @@ import Link from 'next/link';
 
 export default function RoadmapPage() {
   const searchParams = useSearchParams();
-  const careerId = searchParams.get('careerId');
+  const roadmapId = searchParams.get('roadmapId'); // Personalized roadmap ID
+  const careerId = searchParams.get('careerId'); // Base career roadmap ID
   const studentId = searchParams.get('studentId');
 
   const [roadmap, setRoadmap] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set());
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+  const [isPersonalized, setIsPersonalized] = useState(false);
 
   useEffect(() => {
-    if (!careerId) {
-      setError('Career ID is required');
+    if (!roadmapId && !careerId) {
+      setError('Roadmap ID or Career ID is required');
       setLoading(false);
       return;
     }
 
     const fetchRoadmap = async () => {
       try {
-        const res = await fetch(`/api/roadmaps?careerId=${careerId}`);
-        const data = await res.json();
+        let res, data;
         
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to fetch roadmap');
-        }
-        
-        setRoadmap(data.roadmap);
-        if (data.roadmap?.levels?.[0]) {
-          setExpandedLevels(new Set([data.roadmap.levels[0].levelId]));
+        // Fetch personalized roadmap if roadmapId is provided
+        if (roadmapId) {
+          res = await fetch(`/api/personalized-roadmap/${roadmapId}`);
+          data = await res.json();
+          
+          if (res.ok && data.roadmap) {
+            setIsPersonalized(true);
+            setRoadmap(data.roadmap);
+            // Expand first stage by default
+            if (data.roadmap.stages?.[0]) {
+              setExpandedStages(new Set([data.roadmap.stages[0].name]));
+            }
+          } else {
+            throw new Error(data.error || 'Failed to fetch personalized roadmap');
+          }
+        } else {
+          // Fallback to base career roadmap
+          res = await fetch(`/api/roadmaps?careerId=${careerId}`);
+          data = await res.json();
+          
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to fetch roadmap');
+          }
+          
+          setRoadmap(data.roadmap);
+          if (data.roadmap?.levels?.[0]) {
+            setExpandedStages(new Set([data.roadmap.levels[0].levelId]));
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -42,16 +64,16 @@ export default function RoadmapPage() {
     };
 
     fetchRoadmap();
-  }, [careerId]);
+  }, [roadmapId, careerId]);
 
-  const toggleLevel = (levelId: string) => {
-    const newExpanded = new Set(expandedLevels);
-    if (newExpanded.has(levelId)) {
-      newExpanded.delete(levelId);
+  const toggleStage = (stageId: string) => {
+    const newExpanded = new Set(expandedStages);
+    if (newExpanded.has(stageId)) {
+      newExpanded.delete(stageId);
     } else {
-      newExpanded.add(levelId);
+      newExpanded.add(stageId);
     }
-    setExpandedLevels(newExpanded);
+    setExpandedStages(newExpanded);
   };
 
   if (loading) {
@@ -91,32 +113,169 @@ export default function RoadmapPage() {
           >
             ← Quay lại Dashboard
           </Link>
+          {isPersonalized && (
+            <div className="mb-4 inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold">
+              <span>✨</span>
+              Lộ trình cá nhân hóa bởi AI
+            </div>
+          )}
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
-            {roadmap.title}
+            {roadmap.careerName || roadmap.title}
           </h1>
           <p className="text-gray-600 text-lg">{roadmap.description}</p>
           
           <div className="mt-6 flex gap-4 text-sm flex-wrap">
-            <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg">
-              <span className="font-semibold">Tổng thời gian:</span> {roadmap.totalDuration || 'N/A'}
-            </div>
-            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
-              <span className="font-semibold">Kỹ năng:</span> {roadmap.totalSkills || 0}
-            </div>
-            <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg">
-              <span className="font-semibold">Khóa học:</span> {roadmap.totalCourses || 0}
-            </div>
+            {isPersonalized ? (
+              <>
+                <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg">
+                  <span className="font-semibold">Số giai đoạn:</span> {roadmap.stages?.length || 0}
+                </div>
+                {roadmap.generatedAt && (
+                  <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
+                    <span className="font-semibold">Tạo ngày:</span> {new Date(roadmap.generatedAt).toLocaleDateString('vi-VN')}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg">
+                  <span className="font-semibold">Tổng thời gian:</span> {roadmap.totalDuration || 'N/A'}
+                </div>
+                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
+                  <span className="font-semibold">Kỹ năng:</span> {roadmap.totalSkills || 0}
+                </div>
+                <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg">
+                  <span className="font-semibold">Khóa học:</span> {roadmap.totalCourses || 0}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         <div className="space-y-4">
-          {roadmap.levels?.map((level: any) => {
-            const isExpanded = expandedLevels.has(level.levelId);
+          {/* Render personalized roadmap stages */}
+          {isPersonalized && roadmap.stages?.map((stage: any, stageIdx: number) => {
+            const isExpanded = expandedStages.has(stage.name);
+            
+            return (
+              <div key={stageIdx} className="bg-white rounded-xl shadow-md overflow-hidden">
+                <button
+                  onClick={() => toggleStage(stage.name)}
+                  className="w-full p-6 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
+                        {stageIdx + 1}
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">{stage.name}</h2>
+                        {stage.recommendedSemesters && stage.recommendedSemesters.length > 0 && (
+                          <p className="text-gray-600 mt-1">
+                            Học kỳ đề xuất: {stage.recommendedSemesters.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <svg
+                      className={`w-6 h-6 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="px-6 pb-6 border-t border-gray-100">
+                    {stage.areas?.map((area: any, areaIdx: number) => (
+                      <div key={areaIdx} className="mt-4 border-l-4 border-purple-400 pl-4">
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">{area.name}</h3>
+                        <div className="space-y-3">
+                          {area.items?.map((item: any, itemIdx: number) => {
+                            const personalization = item.personalization;
+                            const statusColors = {
+                              already_mastered: 'bg-green-50 border-green-200',
+                              review_needed: 'bg-yellow-50 border-yellow-200',
+                              new_topic: 'bg-blue-50 border-blue-200',
+                            };
+                            const priorityBadges = {
+                              high_priority: 'bg-red-100 text-red-800',
+                              medium_priority: 'bg-yellow-100 text-yellow-800',
+                              low_priority: 'bg-gray-100 text-gray-800',
+                            };
+
+                            return (
+                              <div
+                                key={itemIdx}
+                                className={`p-4 rounded-lg border-2 ${
+                                  personalization?.status ? statusColors[personalization.status as keyof typeof statusColors] : 'bg-gray-50 border-gray-200'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold text-gray-900 flex-1">
+                                    {item.check ? '✅ ' : '◻️ '}
+                                    {item.title}
+                                  </h4>
+                                  {personalization?.priority && (
+                                    <span className={`text-xs px-2 py-1 rounded-full ml-2 ${priorityBadges[personalization.priority as keyof typeof priorityBadges]}`}>
+                                      {typeof personalization.priority === 'string' 
+                                        ? personalization.priority.replace('_', ' ')
+                                        : String(personalization.priority).replace('_', ' ')
+                                      }
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {item.description && (
+                                  <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+                                )}
+                                
+                                {personalization?.personalizedDescription && (
+                                  <div className="mt-2 p-2 bg-purple-50 rounded text-sm">
+                                    <span className="font-semibold text-purple-900">💡 Lời khuyên AI: </span>
+                                    <span className="text-purple-800">{personalization.personalizedDescription}</span>
+                                  </div>
+                                )}
+                                
+                                {personalization?.reason && (
+                                  <p className="text-xs text-gray-500 mt-2 italic">{personalization.reason}</p>
+                                )}
+                                
+                                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                  {item.estimatedHours > 0 && (
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                      ⏱️ {item.estimatedHours}h
+                                    </span>
+                                  )}
+                                  {item.skillTags?.map((tag: string, tagIdx: number) => (
+                                    <span key={tagIdx} className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          
+          {/* Render base career roadmap levels */}
+          {!isPersonalized && roadmap.levels?.map((level: any) => {
+            const isExpanded = expandedStages.has(level.levelId);
             
             return (
               <div key={level.levelId} className="bg-white rounded-xl shadow-md overflow-hidden">
                 <button
-                  onClick={() => toggleLevel(level.levelId)}
+                  onClick={() => toggleStage(level.levelId)}
                   className="w-full p-6 text-left hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center justify-between">

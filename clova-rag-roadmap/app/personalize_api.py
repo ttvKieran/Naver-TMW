@@ -352,7 +352,11 @@ async def get_personalized_roadmap(req: PersonalizeRequest):
     """
     Input:  { "user_id": "...", "jobname": "big data engineer" }
     """
-    user = USERS.get(req.user_id)
+    # Reload users from file to get latest data
+    from .search_api import load_users
+    users = load_users()
+    
+    user = users.get(req.user_id)
     if not user:
         return {"error": "Unknown user_id"}
 

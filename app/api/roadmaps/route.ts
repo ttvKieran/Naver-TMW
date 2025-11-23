@@ -16,18 +16,23 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Get roadmap for career with populated skills and courses
-    const roadmap = await Roadmap.findOne({ careerId, isActive: true })
-      .populate('careerId')
-      .populate('levels.phases.skillsToLearn.skillId')
-      .populate('levels.phases.recommendedCourses.courseId')
+    // Get roadmap for career (new schema: careerId is string, no references)
+    const roadmap = await Roadmap.findOne({ careerID: careerId })
       .lean();
     
     if (!roadmap) {
-      return NextResponse.json(
-        { error: 'Roadmap not found for this career' },
-        { status: 404 }
-      );
+      // Try with old schema field name as fallback
+      const oldRoadmap = await Roadmap.findOne({ careerId, isActive: true })
+        .lean();
+      
+      if (!oldRoadmap) {
+        return NextResponse.json(
+          { error: 'Roadmap not found for this career' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({ roadmap: oldRoadmap });
     }
     
     return NextResponse.json({ roadmap });
