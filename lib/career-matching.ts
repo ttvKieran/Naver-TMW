@@ -154,33 +154,47 @@ export function predictCareers(profile: ProfileData): CareerMatch[] {
       score += 0.05;
     }
     let traitScore = 0;
-    for (const [trait, weight] of Object.entries(requirements.traitWeights)) {
-      const value = profile.traits[trait as keyof typeof profile.traits] / 10; // Normalize to 0-1
-      traitScore += value * weight;
+    if (profile.traits) {
+      for (const [trait, weight] of Object.entries(requirements.traitWeights)) {
+        const value = (profile.traits[trait as keyof typeof profile.traits] || 5) / 10; // Normalize to 0-1, default 5
+        traitScore += value * weight;
+      }
+    } else {
+      // If no traits, use default score of 0.5 (neutral)
+      traitScore = 0.5;
     }
     score += traitScore * 0.3;
 
-    const strongTraits = Object.entries(profile.traits)
-      .filter(([_, value]) => value >= 7)
-      .map(([trait]) => trait);
+    const strongTraits = profile.traits 
+      ? Object.entries(profile.traits)
+          .filter(([_, value]) => value >= 7)
+          .map(([trait]) => trait)
+      : [];
     
     if (strongTraits.length > 0) {
       reasons.push(`Điểm mạnh về ${strongTraits.join(', ')}`);
     }
 
     let skillScore = 0;
-    for (const [skill, weight] of Object.entries(requirements.skillWeights)) {
-      const value = profile.skills[skill as keyof typeof profile.skills] / 10;
-      skillScore += value * weight;
+    if (profile.skills) {
+      for (const [skill, weight] of Object.entries(requirements.skillWeights)) {
+        const value = (profile.skills[skill as keyof typeof profile.skills] || 5) / 10;
+        skillScore += value * weight;
+      }
+    } else {
+      // If no skills, use default score of 0.5 (neutral)
+      skillScore = 0.5;
     }
     score += skillScore * 0.25;
 
-    const weakSkills = Object.entries(profile.skills)
-      .filter(([skill, value]) => {
-        const weight = requirements.skillWeights[skill as keyof typeof requirements.skillWeights];
-        return weight > 0.2 && value < 5;
-      })
-      .map(([skill]) => skill);
+    const weakSkills = profile.skills
+      ? Object.entries(profile.skills)
+          .filter(([skill, value]) => {
+            const weight = requirements.skillWeights[skill as keyof typeof requirements.skillWeights];
+            return weight > 0.2 && value < 5;
+          })
+          .map(([skill]) => skill)
+      : [];
     
     if (weakSkills.length > 0) {
       challenges.push(`Cần cải thiện kỹ năng: ${weakSkills.join(', ')}`);
@@ -201,7 +215,7 @@ export function predictCareers(profile: ProfileData): CareerMatch[] {
     if (careerName === 'AI Engineer' && profile.gpa < 3.5) {
       challenges.push('Ngành AI đòi hỏi nền tảng toán học vững (GPA cao hơn sẽ tốt hơn)');
     }
-    if (careerName === 'DevOps Engineer' && profile.traits.teamwork < 6) {
+    if (careerName === 'DevOps Engineer' && profile.traits?.teamwork && profile.traits.teamwork < 6) {
       challenges.push('DevOps yêu cầu làm việc nhóm tốt');
     }
 

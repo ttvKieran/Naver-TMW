@@ -1,36 +1,69 @@
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
+import Navbar from '@/components/Navbar';
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}) {
-  const params = await searchParams;
-  const studentId = params.id || 'STU001';
-  
-  // Fetch student data from database
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
+    redirect('/login');
+  }
+
+  const { studentId } = session.user;
+
+  if (!studentId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center pt-20">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Student profile not found
+            </h1>
+            <Link href="/register" className="text-blue-600 hover:underline">
+              Complete your registration →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch student data
   let student: any = null;
+  let dbStudent: any = null;
   let hotCareers: any[] = [];
   let currentRoadmap: any = null;
   let currentCareerId: string | null = null;
-  
+
   try {
-    // Fetch student with populated skills/courses
-    const studentRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students?id=${studentId}`, {
-      cache: 'no-store'
-    });
+    const studentRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students/${studentId}`,
+      { cache: 'no-store' }
+    );
     const studentData = await studentRes.json();
-    
+
     if (studentData.student) {
-      const dbStudent = studentData.student;
-      
-      // Transform database student to dashboard format
+      dbStudent = studentData.student;
+
       student = {
         id: dbStudent.studentCode,
+        studentDbId: dbStudent._id,
         name: dbStudent.fullName,
-        actualCareer: dbStudent.currentCareer || 'Backend Developer',
-        gpa: dbStudent.gpa,
+        university: dbStudent.university || 'Unknown University',
+        major: dbStudent.major || 'Unknown Major',
+        actualCareer:
+          dbStudent.career?.actualCareer ||
+          dbStudent.career?.targetCareerID ||
+          'Backend Developer',
+        predictedCareer: dbStudent.career?.targetCareerID,
+        targetConfidence: dbStudent.career?.targetConfidence,
+        aiCareerRecommendation: dbStudent.aiCareerRecommendation,
+        gpa: dbStudent.academic?.gpa || 3.0,
+        currentSemester: dbStudent.academic?.currentSemester,
         personality: {
           mbti: dbStudent.personality?.mbti || 'ISTJ',
           traits: dbStudent.personality?.traits || {
@@ -39,20 +72,40 @@ export default async function DashboardPage({
             teamwork: 5,
             leadership: 5,
             technical: 5,
-          }
+          },
         },
         skills: {} as Record<string, number>,
         interests: dbStudent.interests || [],
+        itSkills: dbStudent.itSkill || [],
+        softSkills: dbStudent.softSkill || [],
       };
-      
-      // Convert studentSkills array to skills object for chart
-      if (dbStudent.studentSkills && dbStudent.studentSkills.length > 0) {
-        dbStudent.studentSkills.forEach((skill: any) => {
-          const skillName = skill.skillId?.name?.toLowerCase().replace(/\s+/g, '') || 'unknown';
-          student.skills[skillName] = skill.proficiencyLevel;
-        });
-      } else {
-        // Fallback skills
+
+      // Process skills
+      if (dbStudent.skills?.technical) {
+        if (dbStudent.skills.technical instanceof Map) {
+          dbStudent.skills.technical.forEach((level: number, skillName: string) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level;
+          });
+        } else {
+          Object.entries(dbStudent.skills.technical).forEach(([skillName, level]) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level as number;
+          });
+        }
+      }
+
+      if (dbStudent.skills?.general) {
+        if (dbStudent.skills.general instanceof Map) {
+          dbStudent.skills.general.forEach((level: number, skillName: string) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level;
+          });
+        } else {
+          Object.entries(dbStudent.skills.general).forEach(([skillName, level]) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level as number;
+          });
+        }
+      }
+
+      if (Object.keys(student.skills).length === 0) {
         student.skills = {
           programming: 7,
           problemSolving: 7,
@@ -62,67 +115,60 @@ export default async function DashboardPage({
         };
       }
     }
-    
-    // Fetch hot careers
-    const careersRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`, {
-      cache: 'no-store'
-    });
+
+    // Fetch careers
+    const careersRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`,
+      { cache: 'no-store' }
+    );
     const careersData = await careersRes.json();
     hotCareers = careersData.careers?.slice(0, 6) || [];
-    
-    // Find career by title match
-    const currentCareer = careersData.careers?.find((c: any) =>
-      c.title.toLowerCase() === student?.actualCareer?.toLowerCase()
+
+    const currentCareer = careersData.careers?.find(
+      (c: any) => c.title.toLowerCase() === student?.actualCareer?.toLowerCase()
     );
-    
-    // Fetch roadmap for current career
+
     if (currentCareer) {
       currentCareerId = currentCareer._id;
+    }
+
+    // Fetch personalized roadmap
+    if (dbStudent) {
       try {
-        const roadmapRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/roadmaps?careerId=${currentCareer._id}`, {
-          cache: 'no-store'
-        });
-        const roadmapData = await roadmapRes.json();
-        currentRoadmap = roadmapData.roadmap;
+        const personalizedRoadmapRes = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/personalized-roadmap?studentId=${dbStudent._id}`,
+          { cache: 'no-store' }
+        );
+
+        if (personalizedRoadmapRes.ok) {
+          const personalizedData = await personalizedRoadmapRes.json();
+          const roadmap = personalizedData.roadmap;
+          currentRoadmap = {
+            _id: roadmap._id,
+            careerName: roadmap.careerName,
+            description: roadmap.description,
+            generatedAt: roadmap.generatedAt,
+            stagesCount: roadmap.stages?.length || 0,
+          };
+        }
       } catch (err) {
-        console.error('Roadmap not found:', err);
+        console.error('Error fetching roadmap:', err);
       }
     }
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
-    // Fallback to hardcoded data
-    student = {
-      id: "STU001",
-      name: "Phan Lan",
-      actualCareer: "Backend Developer",
-      gpa: 3.6,
-      personality: {
-        mbti: "ISTJ",
-        traits: {
-          analytical: 9,
-          creative: 4,
-          teamwork: 5,
-          leadership: 6,
-          technical: 9
-        }
-      },
-      skills: {
-        programming: 7,
-        problemSolving: 7,
-        communication: 6,
-        systemDesign: 8,
-        dataAnalysis: 5
-      },
-      interests: ["data-science", "coding", "automation", "cloud"]
-    };
+    console.error('Error loading dashboard:', error);
   }
 
   if (!student) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Student not found</h1>
-          <Link href="/" className="text-blue-600 hover:underline">← Back to home</Link>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center pt-20">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Unable to load student data
+            </h1>
+          </div>
         </div>
       </div>
     );
@@ -130,31 +176,9 @@ export default async function DashboardPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Dashboard Sinh Viên
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Tổng quan về kỹ năng, điểm số và lộ trình nghề nghiệp
-              </p>
-            </div>
-            <Link
-              href="/"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              ← Về trang chủ
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+      <Navbar />
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <StudentDashboard 
+        <StudentDashboard
           student={student}
           hotCareers={hotCareers}
           currentRoadmap={currentRoadmap}
