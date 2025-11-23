@@ -6,13 +6,8 @@
   "framework": "nextjs",
   "regions": ["sin1"],
   "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "NEXT_PUBLIC_BASE_URL": "@next_public_base_url",
-    "NCP_CLOVASTUDIO_API_KEY": "@ncp_clovastudio_api_key",
-    "NCP_APIGW_API_KEY": "@ncp_apigw_api_key",
-    "NCP_REQUEST_ID": "@ncp_request_id",
-    "PYTHON_API_URL": "@python_api_url"
+    "MONGODB_URI": "process.env.MONGODB_URI",
+    "NEXTAUTH_SECRET": "process.env.NEXTAUTH_SECRET",
+    "NEXTAUTH_URL": "process.env.NEXTAUTH_URL"
   }
 }
