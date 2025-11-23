@@ -28,11 +28,9 @@ export default async function Home() {
       <header className="bg-card/70 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50 supports-[backdrop-filter]:bg-card/60">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
+            <img src="/leopath.png" alt="Leopath Logo" className="w-10 h-10"/>
             <div>
-              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none">Career Platform</h1>
+              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none">Leopath</h1>
               <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Powered by Naver ClovaX</p>
             </div>
           </div>
@@ -283,10 +281,10 @@ export default async function Home() {
       <footer className="bg-card border-t border-border py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">C</div>
-            <span className="font-bold text-foreground">Career Platform</span>
+            <img src="leopath.png" alt="Leopath Logo" className="w-8 h-8"/>
+            <span className="font-bold text-foreground">Leopath</span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2024 Career Platform. Powered by Naver ClovaX.</p>
+          <p className="text-sm text-muted-foreground">© 2024 Leopath. Powered by Naver ClovaX.</p>
         </div>
       </footer>
     </div>

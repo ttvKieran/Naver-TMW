@@ -20,49 +20,15 @@ export default async function DashboardPage({
   try {
     await connectDB();
     
-    // Fetch student with populated skills/courses
-    const dbStudent = await Student.findOne({ studentCode: studentId })
-      .populate('studentSkills.skillId')
-      .populate('studentCourses.courseId')
-      .lean();
+    // Fetch student data
+    const dbStudent = await Student.findOne({ studentCode: studentId }).lean();
 
     if (dbStudent) {
       // Transform database student to dashboard format
-      student = {
-        id: dbStudent.studentCode,
-        name: dbStudent.fullName,
-        actualCareer: dbStudent.currentCareer || 'Backend Developer',
-        gpa: dbStudent.cpa || 0,
-        personality: {
-          mbti: dbStudent.personality?.mbti || 'ISTJ',
-          traits: dbStudent.personality?.traits || {
-            analytical: 5,
-            creative: 5,
-            teamwork: 5,
-            leadership: 5,
-            technical: 5,
-          }
-        },
-        skills: {} as Record<string, number>,
-        interests: dbStudent.interests || [],
-      };
-
-      // Convert studentSkills array to skills object for chart
-      if (dbStudent.studentSkills && dbStudent.studentSkills.length > 0) {
-        dbStudent.studentSkills.forEach((skill: any) => {
-          const skillName = skill.skillId?.name?.toLowerCase().replace(/\s+/g, '') || 'unknown';
-          student.skills[skillName] = skill.proficiencyLevel;
-        });
-      } else {
-        // Fallback skills
-        student.skills = {
-          programming: 7,
-          problemSolving: 7,
-          communication: 6,
-          systemDesign: 8,
-          dataAnalysis: 5,
-        };
-      }
+      // We can pass the dbStudent mostly as is, but need to handle serialization of ObjectIds
+      student = JSON.parse(JSON.stringify(dbStudent));
+    } else {
+      console.warn(`Student ${studentId} not found`);
     }
 
     // Fetch careers (which serve as roadmaps source in this context)
@@ -77,30 +43,27 @@ export default async function DashboardPage({
 
   } catch (error) {
     console.error('Error loading dashboard data:', error);
-    // Fallback to hardcoded data
+    // Fallback to hardcoded data if DB fails
     student = {
-      id: "STU001",
-      name: "Phan Lan",
-      actualCareer: "Backend Developer",
-      gpa: 3.6,
-      personality: {
-        mbti: "ISTJ",
-        traits: {
-          analytical: 8,
-          creative: 4,
-          teamwork: 6,
-          leadership: 5,
-          technical: 9,
-        }
+      studentCode: "STU001",
+      fullName: "Vũ Thu Hiếu",
+      academic: {
+        currentSemester: 5,
+        gpa: 3.19,
+        courses: []
+      },
+      career: {
+        actualCareer: "Backend Developer"
+      },
+      availability: {
+        timePerWeekHours: 8
       },
       skills: {
-        programming: 8,
-        problemSolving: 7,
-        communication: 6,
-        systemDesign: 5,
-        dataAnalysis: 7,
+        technical: { python: 4, javascript: 4 },
+        general: { communication: 8 }
       },
-      interests: ["Web Development", "Cloud Computing", "AI"],
+      interests: ["web_dev"],
+      projects: []
     };
   }
 
@@ -110,11 +73,9 @@ export default async function DashboardPage({
       <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
+            <img src="/leopath.png" alt="Leopath Logo" className="w-10 h-10"/>
             <div>
-              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none group-hover:text-primary transition-colors">Career Platform</h1>
+              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none group-hover:text-primary transition-colors">Leopath</h1>
               <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Dashboard</p>
             </div>
           </Link>

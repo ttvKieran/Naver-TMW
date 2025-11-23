@@ -157,31 +157,61 @@ async function seed() {
   const usersFile = path.join(process.cwd(), 'data', 'users', 'users.json');
   if (fs.existsSync(usersFile)) {
     const usersData = JSON.parse(fs.readFileSync(usersFile, 'utf-8'));
-    console.log(`Found ${usersData.length} users.`);
-    
-    // Limit to first 50 users to save time if needed, or seed all
-    for (const u of usersData.slice(0, 50)) {
-       const user = await User.create({
-          email: `${u.user_id.toLowerCase()}@example.com`,
-          password: 'password123',
-          name: u.full_name,
-          role: 'student'
-       });
+    console.log(`Found ${usersData.length} users in users.json`);
 
-       await Student.create({
-          userId: user._id,
-          studentCode: u.user_id,
-          fullName: u.full_name,
-          currentYear: Math.ceil(u.academic.current_semester / 2),
-          cpa: u.academic.gpa,
-          personality: {
-             traits: {
-               analytical: 5, creative: 5, teamwork: 5, leadership: 5, technical: 5
-             }
-          },
-          studentSkills: [],
-          studentCourses: []
-       });
+    for (const userData of usersData) {
+      console.log(`Processing user ${userData.full_name}...`);
+
+      // Create User
+      const user = await User.create({
+        email: `${userData.user_id.toLowerCase()}@example.com`,
+        password: 'password123',
+        name: userData.full_name,
+        role: 'student'
+      });
+
+      // Create Student Profile
+      await Student.create({
+        userId: user._id,
+        studentCode: userData.user_id,
+        fullName: userData.full_name,
+        
+        academic: {
+          currentSemester: userData.academic.current_semester,
+          gpa: userData.academic.gpa,
+          courses: userData.academic.courses.map((c: any) => ({
+            code: c.code,
+            name: c.name,
+            grade: c.grade
+          }))
+        },
+
+        career: {
+          targetCareerId: userData.career.target_career_id,
+          actualCareer: userData.career.actual_career,
+          targetConfidence: userData.career.target_confidence
+        },
+
+        availability: {
+          timePerWeekHours: userData.availability.time_per_week_hours
+        },
+
+        skills: {
+          technical: userData.skills.technical,
+          general: userData.skills.general
+        },
+
+        interests: userData.interests,
+        projects: userData.projects,
+        itSkills: userData.it_skill,
+        softSkills: userData.soft_skill,
+
+        meta: {
+          source: userData.meta.source,
+          createdAt: new Date(userData.meta.created_at),
+          updatedAt: new Date(userData.meta.updated_at)
+        }
+      });
     }
   }
 

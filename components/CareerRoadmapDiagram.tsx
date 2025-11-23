@@ -182,11 +182,13 @@ const nodeTypes = {
 interface CareerRoadmapDiagramProps {
   roadmapData: RoadmapStage[];
   onSelectDetail?: (detail: DiagramDetailSelection | null) => void;
+  selectedItemId?: string | null;
 }
 
 export default function CareerRoadmapDiagram({
   roadmapData,
   onSelectDetail,
+  selectedItemId,
 }: CareerRoadmapDiagramProps) {
   const [isMounted, setIsMounted] = useState(false);
   
@@ -194,6 +196,33 @@ export default function CareerRoadmapDiagram({
   const [expandedStageIds, setExpandedStageIds] = useState<string[]>([]);
   const [expandedAreaIds, setExpandedAreaIds] = useState<string[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+
+  // Sync activeItemId with selectedItemId prop and ensure visibility
+  useEffect(() => {
+    if (selectedItemId !== undefined) {
+      setActiveItemId(selectedItemId);
+
+      if (selectedItemId) {
+        // Find the item in roadmapData to get its stageId and areaId
+        for (const stage of roadmapData) {
+          for (const area of stage.areas) {
+            const item = area.items.find(i => i.itemId === selectedItemId);
+            if (item) {
+              // Expand stage if not already expanded
+              setExpandedStageIds(prev => 
+                prev.includes(stage.stageId) ? prev : [...prev, stage.stageId]
+              );
+              // Expand area if not already expanded
+              setExpandedAreaIds(prev => 
+                prev.includes(area.areaId) ? prev : [...prev, area.areaId]
+              );
+              return;
+            }
+          }
+        }
+      }
+    }
+  }, [selectedItemId, roadmapData]);
 
   // Initialize expansion
   useEffect(() => {

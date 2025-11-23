@@ -93,6 +93,7 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
             <CareerRoadmapDiagram
               roadmapData={roadmap}
               onSelectDetail={handleDetailSelect}
+              selectedItemId={selectedDetail?.itemId}
             />
           </div>
 
