@@ -43,7 +43,7 @@ clova-rag-roadmap/
 │
 ├─ .env.local                 # Chứa NCP_API_KEY
 └─ README.md
-
+```
 ## 2. Chuẩn bị môi trường
 
 ### 2.1. Tạo virtualenv và cài dependency
@@ -53,72 +53,92 @@ cd clova-rag-roadmap
 
 # (tuỳ chọn) tạo virtualenv
 python -m venv .venv
-[activate](http://_vscodecontentref_/0)
+./.venv/Scripts/activate
 
 # cài package
 pip install -r requirements.txt
+```
 
-### 2.2. Cấu hình NCP_API_KEY
-Tạo file .env.local trong thư mục clova-rag-roadmap/:
+### 2.2. Cấu hình `NCP_API_KEY`
+
+Tạo file `.env.local` trong thư mục `clova-rag-roadmap/` với nội dung:
 
 ```bash
 NCP_API_KEY=YOUR_CLOVA_STUDIO_API_KEY
+```
 
 ## 3. Chuẩn bị dữ liệu
-3.1. Roadmap nghề (data/jobs/*.json)
+
+### 3.1. Roadmap nghề (`data/jobs/*.json`)
+
 Mỗi file JSON mô tả một lộ trình nghề cụ thể, ví dụ:
 
-big_data_engineer.json
-machine_learning.json
-full_stack_developer.json
-...
-3.2. Flatten roadmap → CSV
+- `big_data_engineer.json`
+- `machine_learning.json`
+- `full_stack_developer.json`
+- ...
+
+### 3.2. Flatten roadmap → CSV
+
 Nếu chỉnh sửa roadmap JSON, chạy lại script flatten:
 
+```bash
 cd clova-rag-roadmap
 python scripts/flatten_roadmap.py
+```
 
-Script sẽ sinh lại các file trong data/flatten_roadmaps/.
+Script sẽ sinh lại các file trong `data/flatten_roadmaps/`.
 
-3.3. Sinh embedding cho roadmap
+### 3.3. Sinh embedding cho roadmap
 
+```bash
 cd clova-rag-roadmap
 python scripts/embed_roadmap.py
+```
 
-Script gọi CLOVA Embedding API và lưu vào data/roadmap_embeddings/*_embeddings.csv.
+Script gọi CLOVA Embedding API và lưu vào `data/roadmap_embeddings/*_embeddings.csv`.
 
-4.2. Personalize API (gắn check + personalization)
-Chạy FastAPI cho personalize_api.py:
+## 4. Personalize API (gắn `check` + `personalization`)
 
+Chạy FastAPI cho `personalize_api.py`:
+
+```bash
 cd clova-rag-roadmap
 uvicorn app.personalize_api:app --reload --host 0.0.0.0 --port 8080
+```
 
-Mở docs:
+Mở docs tại:
 
 http://127.0.0.1:8080/docs
+
 Endpoint chính:
 
-POST /roadmap/personalized
+- `POST /roadmap/personalized`
+
 Body mẫu:
 
+```json
 {
   "user_id": "user_001",
   "jobname": "big data engineer"
 }
+```
 
 Luồng xử lý:
 
-Load roadmap gốc từ data/jobs/big_data_engineer.json.
-Build PROFILE từ data/users/users.json.
-Gửi PROFILE + CANONICAL ROADMAP JSON vào HCX-007.
-Model trả về bản roadmap đầy đủ, đã gắn:
-check: true/false
-personalization: { status, priority, personalized_description, reason }
-API merge kết quả vào canonical, đảm bảo không mất stage/area/item nào.
+1. Load roadmap gốc từ `data/jobs/big_data_engineer.json`.
+2. Build PROFILE từ `data/users/users.json`.
+3. Gửi PROFILE + CANONICAL ROADMAP JSON vào HCX-007.
+4. Model trả về bản roadmap đầy đủ, đã gắn:
+   - `check: true/false`
+   - `personalization: { status, priority, personalized_description, reason }`
+5. API merge kết quả vào canonical, đảm bảo không mất stage/area/item nào.
 
-5. Định dạng users.json
-Ví dụ một user sau khi được normalize_user:
+## 5. Định dạng `users.json`
 
+Ví dụ một user sau khi được `normalize_user`:
+
+```json
 {
   "user_id": "user_001",
   "full_name": "Nguyen Van A",
@@ -144,7 +164,8 @@ Ví dụ một user sau khi được normalize_user:
   "projects": ["Small ETL pipeline for course project"],
   "meta": {}
 }
+```
 
-search_api và personalize_api đều dựa vào schema đã chuẩn hoá này.
+`search_api` và `personalize_api` đều dựa vào schema đã chuẩn hoá này.
 
-test.json là ví dụ roadmap machine learning cá nhân hóa
+`scripts/test.json` là ví dụ roadmap machine learning đã được cá nhân hóa.
