@@ -104,7 +104,7 @@ Chạy FastAPI cho `personalize_api.py`:
 
 ```bash
 cd clova-rag-roadmap
-uvicorn app.personalize_api:app --reload --host 0.0.0.0 --port 8080
+uvicorn app.personalize_api:app --port 8080
 ```
 
 Mở docs tại:
