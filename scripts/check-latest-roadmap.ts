@@ -23,9 +23,9 @@ async function checkLatestRoadmap() {
 
     console.log('📋 Latest student:');
     console.log('- ID:', latestStudent._id);
-    console.log('- Name:', latestStudent.name);
+    // console.log('- Name:', latestStudent.name);
     console.log('- Student Code:', latestStudent.studentCode);
-    console.log('- Email:', latestStudent.email);
+    // console.log('- Email:', latestStudent.email);
 
     // Check if roadmap exists for this student
     const roadmap = await PersonalizedRoadmap.findOne({ studentId: latestStudent._id })
