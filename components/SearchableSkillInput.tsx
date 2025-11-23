@@ -115,7 +115,7 @@ export default function SearchableSkillInput({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="relative">
         <input
           ref={inputRef}
@@ -124,21 +124,21 @@ export default function SearchableSkillInput({
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => searchQuery && setShowSuggestions(true)}
-          placeholder={placeholder || 'Tìm kiếm và thêm kỹ năng...'}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder={placeholder || 'Search and add skills...'}
+          className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a] placeholder-[#8a7a70]/50"
         />
         
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            className="absolute z-20 w-full mt-2 bg-white border border-[#f0e6dd] rounded-xl shadow-xl max-h-60 overflow-y-auto"
           >
             {suggestions.map((skill, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => handleAddSkill(skill)}
-                className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 text-left text-[#1a1a1a] hover:bg-[#eb7823]/10 focus:bg-[#eb7823]/10 focus:outline-none transition-colors first:rounded-t-xl last:rounded-b-xl"
               >
                 {skill}
               </button>
@@ -153,13 +153,13 @@ export default function SearchableSkillInput({
           {selectedSkills.map((skill, index) => (
             <span
               key={index}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#eb7823]/10 text-[#eb7823] border border-[#eb7823]/20 rounded-full text-sm font-medium"
             >
               {skill}
               <button
                 type="button"
                 onClick={() => handleRemoveSkill(skill)}
-                className="hover:text-blue-600 focus:outline-none"
+                className="hover:text-[#6e3787] focus:outline-none transition-colors font-bold"
                 aria-label={`Remove ${skill}`}
               >
                 ×
@@ -169,8 +169,8 @@ export default function SearchableSkillInput({
         </div>
       )}
 
-      <p className="text-sm text-gray-500">
-        {searchQuery && !showSuggestions && 'Nhấn Enter để thêm kỹ năng tùy chỉnh'}
+      <p className="text-xs text-[#8a7a70]">
+        {searchQuery && !showSuggestions && 'Press Enter to add custom skill'}
       </p>
     </div>
   );

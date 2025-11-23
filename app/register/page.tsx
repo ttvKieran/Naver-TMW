@@ -170,37 +170,41 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
+    <div className="min-h-screen bg-[#fffbf7] py-12 px-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#eb7823]/10 to-[#6e3787]/10 rounded-full blur-3xl opacity-60 -mr-20 -mt-20"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[#eb7823]/10 to-[#6e3787]/10 rounded-full blur-3xl opacity-60 -ml-20 -mb-20"></div>
+
+      <div className="max-w-2xl mx-auto relative z-10">
+        <div className="bg-white rounded-3xl shadow-xl border border-[#f0e6dd] p-8">
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between mb-2">
               {[1, 2, 3, 4, 5].map((s) => (
                 <div
                   key={s}
-                  className={`w-1/5 text-center text-sm font-medium ${
-                    s <= step ? 'text-blue-600' : 'text-gray-400'
+                  className={`w-1/5 text-center text-sm font-bold ${
+                    s <= step ? 'text-[#eb7823]' : 'text-[#8a7a70]/50'
                   }`}
                 >
-                  {s === 5 ? '✓' : `Bước ${s}`}
+                  {s === 5 ? '✓' : `Step ${s}`}
                 </div>
               ))}
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-[#fdf6f0] rounded-full h-2 overflow-hidden">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-[#eb7823] to-[#6e3787] h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${(step / 5) * 100}%` }}
               />
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-            Đăng ký tài khoản
+          <h1 className="text-3xl font-bold text-[#1a1a1a] mb-6 text-center tracking-tight">
+            Create Your Account
           </h1>
 
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-medium">
               {error}
             </div>
           )}
@@ -208,58 +212,62 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit}>
             {/* Step 1: Account Info */}
             {step === 1 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">Thông tin tài khoản</h2>
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-[#1a1a1a] mb-4">Account Information</h2>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Email Address *
                   </label>
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
+                    placeholder="student@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên hiển thị *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Display Name *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
+                    placeholder="How should we call you?"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mật khẩu *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Password *
                   </label>
                   <input
                     type="password"
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
+                    placeholder="••••••••"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Xác nhận mật khẩu *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Confirm Password *
                   </label>
                   <input
                     type="password"
                     required
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
+                    placeholder="••••••••"
                   />
                 </div>
               </div>
@@ -267,59 +275,59 @@ export default function RegisterPage() {
 
             {/* Step 2: Personal Info */}
             {step === 2 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">Thông tin cá nhân</h2>
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-[#1a1a1a] mb-4">Personal Details</h2>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Họ và tên đầy đủ *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Full Name *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngày sinh
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Date of Birth
                   </label>
                   <input
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Giới tính
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Gender
                   </label>
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value as any })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                   >
-                    <option value="">Chọn giới tính</option>
-                    <option value="male">Nam</option>
-                    <option value="female">Nữ</option>
-                    <option value="other">Khác</option>
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số điện thoại
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Phone Number
                   </label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                   />
                 </div>
               </div>
@@ -328,11 +336,11 @@ export default function RegisterPage() {
             {/* Step 3: Skills */}
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold mb-4">Kỹ năng của bạn</h2>
+                <h2 className="text-xl font-bold text-[#1a1a1a] mb-4">Your Skills & Goals</h2>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    IT Skills * (Tối thiểu 1)
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    IT Skills * (Min 1)
                   </label>
                   <SearchableSkillInput
                     skillType="it"
@@ -343,12 +351,12 @@ export default function RegisterPage() {
                         skills: { ...formData.skills, itSkills: skills },
                       })
                     }
-                    placeholder="Tìm kiếm IT skills (Python, Java, React...)"
+                    placeholder="Search IT skills (Python, Java, React...)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
                     Soft Skills
                   </label>
                   <SearchableSkillInput
@@ -360,20 +368,20 @@ export default function RegisterPage() {
                         skills: { ...formData.skills, softSkills: skills },
                       })
                     }
-                    placeholder="Tìm kiếm soft skills (teamwork, communication...)"
+                    placeholder="Search soft skills (teamwork, communication...)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mục tiêu nghề nghiệp
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Career Goals
                   </label>
                   <textarea
                     value={formData.careerGoals}
                     onChange={(e) => setFormData({ ...formData, careerGoals: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Ví dụ: Trở thành Full Stack Developer tại công ty công nghệ lớn..."
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
+                    placeholder="E.g., Become a Full Stack Developer at a top tech company..."
                   />
                 </div>
               </div>
@@ -381,73 +389,73 @@ export default function RegisterPage() {
 
             {/* Step 4: Academic Info */}
             {step === 4 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">Thông tin học tập</h2>
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-[#1a1a1a] mb-4">Academic Background</h2>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Trường *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    University *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.university}
                     readOnly
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-[#fdf6f0]/50 border border-[#f0e6dd] rounded-xl text-[#8a7a70] cursor-not-allowed"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Hiện tại chỉ hỗ trợ Học viện Công nghệ Bưu chính Viễn thông
+                  <p className="text-xs text-[#8a7a70] mt-1">
+                    Currently supporting PTIT only
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngành *
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    Major *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.major}
                     readOnly
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-3 bg-[#fdf6f0]/50 border border-[#f0e6dd] rounded-xl text-[#8a7a70] cursor-not-allowed"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Hiện tại chỉ hỗ trợ Công nghệ Thông tin
+                  <p className="text-xs text-[#8a7a70] mt-1">
+                    Currently supporting Information Technology only
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Năm học *
+                    <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                      Year *
                     </label>
                     <select
                       required
                       value={formData.currentYear}
                       onChange={(e) => setFormData({ ...formData, currentYear: parseInt(e.target.value) })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                     >
                       {[1, 2, 3, 4, 5].map((year) => (
                         <option key={year} value={year}>
-                          Năm {year}
+                          Year {year}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Kỳ học hiện tại *
+                    <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                      Semester *
                     </label>
                     <select
                       required
                       value={formData.currentSemester}
                       onChange={(e) => setFormData({ ...formData, currentSemester: parseInt(e.target.value) })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((sem) => (
                         <option key={sem} value={sem}>
-                          Kỳ {sem}
+                          Semester {sem}
                         </option>
                       ))}
                     </select>
@@ -455,8 +463,8 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    GPA (Thang 4.0)
+                  <label className="block text-sm font-bold text-[#1a1a1a] mb-2">
+                    GPA (4.0 Scale)
                   </label>
                   <input
                     type="number"
@@ -465,7 +473,7 @@ export default function RegisterPage() {
                     max="4"
                     value={formData.gpa}
                     onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#fdf6f0] border border-[#f0e6dd] rounded-xl focus:ring-2 focus:ring-[#eb7823] focus:border-transparent transition-all outline-none text-[#1a1a1a]"
                     placeholder="3.50"
                   />
                 </div>
@@ -475,43 +483,43 @@ export default function RegisterPage() {
             {/* Step 5: AI Preview */}
             {step === 5 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-semibold mb-4 text-center">
-                  🎯 Dự đoán Nghề nghiệp của AI
+                <h2 className="text-2xl font-bold mb-4 text-center text-[#1a1a1a]">
+                  🎯 AI Career Prediction
                 </h2>
 
                 {loadingPreview ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-4"></div>
-                    <p className="text-gray-600">Đang phân tích hồ sơ của bạn...</p>
-                    <p className="text-sm text-gray-500 mt-2">AI đang xử lý kỹ năng và lộ trình nghề nghiệp</p>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#eb7823] mb-4"></div>
+                    <p className="text-[#1a1a1a] font-medium">Analyzing your profile...</p>
+                    <p className="text-sm text-[#8a7a70] mt-2">AI is processing your skills and career path</p>
                   </div>
                 ) : aiPreview ? (
                   <div className="space-y-6">
                     {/* Predicted Career */}
-                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-lg border-2 border-purple-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Nghề nghiệp phù hợp với bạn:
+                    <div className="bg-gradient-to-r from-[#eb7823]/10 to-[#6e3787]/10 p-6 rounded-2xl border border-[#eb7823]/20">
+                      <h3 className="text-lg font-bold text-[#1a1a1a] mb-2">
+                        Recommended Career Path:
                       </h3>
-                      <p className="text-3xl font-bold text-purple-600">
+                      <p className="text-3xl font-bold text-[#6e3787]">
                         {aiPreview.predictedCareer}
                       </p>
                     </div>
 
                     {/* Career Recommendation */}
-                    <div className="bg-white p-6 rounded-lg border border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <div className="bg-[#fdf6f0] p-6 rounded-2xl border border-[#f0e6dd]">
+                      <h3 className="text-lg font-bold text-[#1a1a1a] mb-4 flex items-center">
                         <span className="mr-2">💡</span>
-                        Lời khuyên từ AI Career Advisor:
+                        AI Advisor Insights:
                       </h3>
-                      <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
+                      <div className="prose prose-sm max-w-none text-[#1a1a1a] whitespace-pre-wrap leading-relaxed">
                         {aiPreview.careerRecommendation}
                       </div>
                     </div>
 
                     {/* Info box */}
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-800">
-                        <strong>✨ Tiếp theo:</strong> Chúng tôi sẽ tạo lộ trình học tập cá nhân hóa dựa trên nghề nghiệp này và kỹ năng hiện tại của bạn.
+                    <div className="bg-[#eb7823]/5 p-4 rounded-xl border border-[#eb7823]/20">
+                      <p className="text-sm text-[#eb7823] font-medium">
+                        <strong>✨ Next Step:</strong> We will generate a personalized learning roadmap based on this career path and your current skills.
                       </p>
                     </div>
                   </div>
@@ -520,15 +528,15 @@ export default function RegisterPage() {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between mt-8 pt-6 border-t border-[#f0e6dd]">
               {step > 1 && step < 5 && (
                 <button
                   type="button"
                   onClick={handleBack}
                   disabled={loadingPreview}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="px-6 py-2.5 border border-[#f0e6dd] text-[#8a7a70] rounded-xl hover:bg-[#fdf6f0] transition-colors disabled:opacity-50 font-medium"
                 >
-                  Quay lại
+                  Back
                 </button>
               )}
               
@@ -536,39 +544,39 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="ml-auto px-6 py-2.5 bg-gradient-to-r from-[#eb7823] to-[#6e3787] text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-[#eb7823]/20 font-bold"
                 >
-                  Tiếp theo
+                  Next Step
                 </button>
               ) : step === 4 ? (
                 <button
                   type="button"
                   onClick={handleNext}
                   disabled={loadingPreview}
-                  className="ml-auto px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400"
+                  className="ml-auto px-6 py-2.5 bg-gradient-to-r from-[#eb7823] to-[#6e3787] text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-[#eb7823]/20 font-bold disabled:opacity-50"
                 >
-                  {loadingPreview ? 'Đang phân tích...' : 'Xem dự đoán AI'}
+                  {loadingPreview ? 'Analyzing...' : 'Get AI Prediction'}
                 </button>
               ) : step === 5 && aiPreview ? (
                 <button
                   type="submit"
                   disabled={loading}
-                  className="ml-auto px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                  className="ml-auto px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-green-500/20 font-bold"
                 >
-                  {loading ? 'Đang tạo tài khoản...' : '✓ Xác nhận & Hoàn tất'}
+                  {loading ? 'Creating Account...' : '✓ Confirm & Finish'}
                 </button>
               ) : null}
             </div>
           </form>
 
           {loading && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg">
-              <p className="font-medium">Đang xử lý đăng ký của bạn...</p>
-              <p className="text-sm mt-1">
-                • Dự đoán ngành nghề phù hợp<br />
-                • Tạo đề xuất từ AI<br />
-                • Tạo lộ trình học tập cá nhân hóa<br />
-                Vui lòng đợi trong giây lát...
+            <div className="mt-6 p-4 bg-[#eb7823]/10 border border-[#eb7823]/20 text-[#eb7823] rounded-xl">
+              <p className="font-bold">Processing your registration...</p>
+              <p className="text-sm mt-1 opacity-80">
+                • Finalizing career path<br />
+                • Generating personalized roadmap<br />
+                • Setting up your dashboard<br />
+                Please wait a moment...
               </p>
             </div>
           )}
