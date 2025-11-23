@@ -7,12 +7,18 @@ export interface RoadmapItem {
   category: 'skill' | 'concept' | 'project' | 'course';
   title: string;
   subtitle?: string;
-  status?: 'locked' | 'available' | 'completed';
+  status?: 'locked' | 'available' | 'completed' | 'already_mastered' | 'review_needed' | 'new_topic';
   description?: string;
   skillTags?: string[];
   prerequisites?: string[];
   requiredSkills?: Array<{ tag: string; min_level: number }>;
   estimatedHours?: number;
+  
+  // Personalization fields
+  priority?: 'high_priority' | 'medium_priority' | 'low_priority' | 'optional';
+  reason?: string;
+  advice?: string;
+  check?: boolean;
 }
 
 export interface RoadmapArea {
@@ -181,7 +187,13 @@ export function generateRoadmapGraph(
                 skillTags: item.skillTags,
                 prerequisites: item.prerequisites,
                 requiredSkills: item.requiredSkills,
-                estimatedHours: item.estimatedHours
+                estimatedHours: item.estimatedHours,
+                // Personalization
+                priority: item.priority,
+                reason: item.reason,
+                advice: item.advice,
+                check: item.check,
+                status: item.status
               },
               draggable: false,
             });

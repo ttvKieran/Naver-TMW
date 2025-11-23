@@ -29,6 +29,11 @@ export type DiagramDetailSelection =
     prerequisites?: string[];
     requiredSkills?: any[];
     estimatedHours?: number;
+    priority?: string;
+    reason?: string;
+    advice?: string;
+    check?: boolean;
+    status?: string;
   };
 
 interface StageNodeData {
@@ -59,6 +64,11 @@ interface TopicNodeData {
   prerequisites?: string[];
   requiredSkills?: any[];
   estimatedHours?: number;
+  priority?: string;
+  reason?: string;
+  advice?: string;
+  check?: boolean;
+  status?: string;
 }
 
 interface TerminalNodeData {
@@ -117,6 +127,17 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
     }
   };
 
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'high_priority': return 'bg-red-100 text-red-700 border-red-200';
+      case 'medium_priority': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'low_priority': return 'bg-green-100 text-green-700 border-green-200';
+      default: return null;
+    }
+  };
+
+  const priorityColor = getPriorityColor(data.priority);
+
   return (
     <div
       className={`w-80 rounded-xl border bg-card shadow-sm transition-all ${
@@ -127,9 +148,16 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
     >
       <div className="px-4 py-3">
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${getBadgeColor(data.category)}`}>
-            {data.category}
-          </span>
+          <div className="flex gap-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${getBadgeColor(data.category)}`}>
+              {data.category}
+            </span>
+            {priorityColor && (
+              <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${priorityColor}`}>
+                {data.priority?.replace('_', ' ')}
+              </span>
+            )}
+          </div>
           {data.estimatedHours && (
              <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -140,18 +168,12 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
         <p className="text-sm font-bold text-foreground leading-snug mb-2">
           {data.title}
         </p>
-        {/* {data.skillTags && data.skillTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1">
-            {data.skillTags.slice(0, 3).map(tag => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-muted/50 border border-border rounded text-muted-foreground">
-                {tag}
-              </span>
-            ))}
-            {data.skillTags.length > 3 && (
-              <span className="text-[10px] px-1.5 py-0.5 text-muted-foreground">+{data.skillTags.length - 3}</span>
-            )}
+        {data.check && (
+          <div className="mt-1 flex items-center gap-1 text-xs text-green-600 font-medium">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+            Recommended
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );
@@ -299,7 +321,12 @@ export default function CareerRoadmapDiagram({
           skillTags: data.skillTags,
           prerequisites: data.prerequisites,
           requiredSkills: data.requiredSkills,
-          estimatedHours: data.estimatedHours
+          estimatedHours: data.estimatedHours,
+          priority: data.priority,
+          reason: data.reason,
+          advice: data.advice,
+          check: data.check,
+          status: data.status
         });
         return;
       }

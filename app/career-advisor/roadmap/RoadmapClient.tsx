@@ -10,9 +10,10 @@ interface RoadmapClientProps {
   career: any;
   roadmap: RoadmapData;
   studentId?: string;
+  isPersonalized?: boolean;
 }
 
-export default function RoadmapClient({ career, roadmap, studentId }: RoadmapClientProps) {
+export default function RoadmapClient({ career, roadmap, studentId, isPersonalized }: RoadmapClientProps) {
   const router = useRouter();
   const [selectedDetail, setSelectedDetail] = useState<DiagramDetailSelection | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -79,7 +80,12 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
             skillTags: item.skillTags,
             prerequisites: item.prerequisites,
             requiredSkills: item.requiredSkills,
-            estimatedHours: item.estimatedHours
+            estimatedHours: item.estimatedHours,
+            priority: item.priority,
+            reason: item.reason,
+            advice: item.advice,
+            check: item.check,
+            status: item.status
           });
           return;
         }
@@ -105,8 +111,13 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
               </svg>
               Back to Results
             </Link>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
               {career.title} Roadmap
+              {isPersonalized && (
+                <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full border border-indigo-200 font-bold uppercase tracking-wide">
+                  Personalized
+                </span>
+              )}
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -213,6 +224,43 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
                   <h2 className="text-2xl font-bold text-foreground mb-3">
                     {selectedDetail.title}
                   </h2>
+
+                  {/* Personalization Info */}
+                  {(selectedDetail.priority || selectedDetail.advice || selectedDetail.reason) && (
+                    <div className="mb-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                      <h4 className="font-bold text-primary text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        AI Recommendation
+                      </h4>
+                      
+                      {selectedDetail.priority && (
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="text-sm font-medium text-muted-foreground">Priority:</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                            selectedDetail.priority === 'high_priority' ? 'bg-red-100 text-red-700' :
+                            selectedDetail.priority === 'medium_priority' ? 'bg-orange-100 text-orange-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {selectedDetail.priority.replace('_', ' ')}
+                          </span>
+                        </div>
+                      )}
+
+                      {selectedDetail.reason && (
+                        <div className="mb-3">
+                          <span className="text-sm font-medium text-muted-foreground block mb-1">Why this?</span>
+                          <p className="text-sm text-foreground">{selectedDetail.reason}</p>
+                        </div>
+                      )}
+
+                      {selectedDetail.advice && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground block mb-1">Advice:</span>
+                          <p className="text-sm text-foreground italic">"{selectedDetail.advice}"</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="prose prose-sm text-muted-foreground mb-6">
                     <p>{selectedDetail.description || "No description available."}</p>
