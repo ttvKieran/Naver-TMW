@@ -5,6 +5,8 @@ import connectDB from "@/lib/mongodb/connection";
 import { Career, Roadmap, PersonalizedRoadmap } from "@/lib/mongodb/models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import fs from 'fs';
+import path from 'path';
 
 // Helper to transform Personalized Roadmap to RoadmapData
 function transformPersonalizedRoadmap(roadmapDoc: any): RoadmapData {
@@ -211,7 +213,21 @@ export default async function RoadmapPage({
       .populate('levels.phases.recommendedCourses.courseId')
       .lean();
     
-    roadmap = transformRoadmap(roadmapDoc);
+    if (roadmapDoc) {
+      roadmap = transformRoadmap(roadmapDoc);
+    } else {
+      // Fallback to reading from JSON file in clova-rag-roadmap/data/jobs
+      try {
+        const jsonPath = path.join(process.cwd(), 'clova-rag-roadmap', 'data', 'jobs', `${careerDoc.careerId}.json`);
+        if (fs.existsSync(jsonPath)) {
+          const fileContent = fs.readFileSync(jsonPath, 'utf-8');
+          const jsonRoadmap = JSON.parse(fileContent);
+          roadmap = transformPersonalizedRoadmap(jsonRoadmap);
+        }
+      } catch (error) {
+        console.error("Error reading roadmap JSON file:", error);
+      }
+    }
   }
 
   // Transform Career for Client Component

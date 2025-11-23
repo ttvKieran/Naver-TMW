@@ -29,6 +29,15 @@ export default function ProfilePage() {
 
   const [newInterest, setNewInterest] = useState('');
 
+  // Password state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+
   useEffect(() => {
     if (session?.user?.studentId) {
       fetchProfile();
@@ -82,7 +91,7 @@ export default function ProfilePage() {
       });
 
       if (res.ok) {
-        setMessage('Profile updated successfully!');
+        setMessage('✅ Profile updated successfully!');
         fetchProfile();
       } else {
         setMessage('❌ Failed to update profile');
@@ -91,6 +100,47 @@ export default function ProfilePage() {
       setMessage('❌ Error updating profile');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage('❌ New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordMessage('❌ Password must be at least 6 characters');
+      return;
+    }
+
+    setChangingPassword(true);
+    setPasswordMessage('');
+
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+          studentId: session?.user?.studentId
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setPasswordMessage('✅ Password changed successfully!');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setPasswordMessage(`❌ ${data.message || 'Failed to change password'}`);
+      }
+    } catch (error) {
+      setPasswordMessage('❌ Error changing password');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -115,7 +165,7 @@ export default function ProfilePage() {
         setTimeout(() => router.push('/my-roadmap'), 2000);
       } else {
         const error = await res.json();
-        setMessage(`${error.error}`);
+        setMessage(`❌ ${error.error}`);
       }
     } catch (error) {
       setMessage('❌ Error regenerating roadmap');
@@ -208,7 +258,7 @@ export default function ProfilePage() {
               ? 'bg-green-50 border-green-100 text-green-800' 
               : 'bg-red-50 border-red-100 text-red-800'
           }`}>
-            <span className="text-xl">{message.includes('✅') ? '🎉' : '❌'}</span>
+            <span className="text-xl">{message.includes('✅') ? '🎉' : '⚠️'}</span>
             <p className="font-medium">{message}</p>
           </div>
         )}
@@ -352,6 +402,78 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* Security Section */}
+            <section className="bg-card rounded-3xl p-8 shadow-sm border border-border">
+              <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-lg">🔒</span>
+                Security
+              </h2>
+
+              <form onSubmit={handleChangePassword} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Current Password</label>
+                    <input
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">New Password</label>
+                    <input
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {passwordMessage && (
+                  <div className={`p-4 rounded-xl text-sm font-medium ${
+                    passwordMessage.startsWith('✅') 
+                      ? 'bg-green-50 text-green-700 border border-green-100' 
+                      : 'bg-red-50 text-red-700 border border-red-100'
+                  }`}>
+                    {passwordMessage}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={changingPassword}
+                    className="px-8 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {changingPassword ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      'Change Password'
+                    )}
+                  </button>
+                </div>
+              </form>
             </section>
           </div>
 

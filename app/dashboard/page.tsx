@@ -54,7 +54,7 @@ export default async function DashboardPage() {
         studentDbId: dbStudent._id,
         name: dbStudent.fullName,
         university: dbStudent.university || 'Unknown University',
-        major: dbStudent.major || 'Unknown Major',
+        major: dbStudent.major || 'Computer Science',
         actualCareer:
           dbStudent.career?.actualCareer ||
           dbStudent.career?.targetCareerID ||
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
       { cache: 'no-store' }
     );
     const careersData = await careersRes.json();
-    hotCareers = careersData.careers?.slice(0, 6) || [];
+    hotCareers = careersData.careers || [];
 
     const currentCareer = careersData.careers?.find(
       (c: any) => c.title.toLowerCase() === student?.actualCareer?.toLowerCase()

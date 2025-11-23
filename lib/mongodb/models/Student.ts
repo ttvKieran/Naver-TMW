@@ -6,6 +6,12 @@ export interface IStudent {
   
   // Personal Info
   fullName: string;
+  phone?: string;
+  dateOfBirth?: Date;
+  gender?: string;
+  university?: string;
+  major?: string;
+  careerGoals?: string;
   
   // Academic Info
   academic: {
@@ -72,6 +78,12 @@ const StudentSchema = new Schema<IStudent>(
       required: true,
       trim: true,
     },
+    phone: String,
+    dateOfBirth: Date,
+    gender: String,
+    university: String,
+    major: String,
+    careerGoals: String,
 
     // Academic Info
     academic: {

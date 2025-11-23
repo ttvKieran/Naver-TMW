@@ -1,133 +1,449 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 import ReactFlow, {
-    Background,
-    Controls,
-    Handle,
-    Position,
-    Edge,
-    Node,
-    useNodesState,
-    useEdgesState,
-    MarkerType,
+  Background,
+  Controls,
+  MiniMap,
+  type Node,
+  type NodeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-// Custom Node Component
-const RoadmapNode = ({ data }: { data: any }) => {
-    return (
-        <div className={`px-4 py-3 shadow-lg rounded-2xl border-2 min-w-[200px] bg-card transition-all ${data.isTarget ? 'border-primary shadow-primary/20 ring-2 ring-primary/10' : 'border-border'
-            }`}>
-            <Handle type="target" position={Position.Left} className="!bg-muted-foreground" />
+import {
+  generateRoadmapGraph,
+  type RoadmapStage,
+  type RoadmapArea,
+  type RoadmapItem,
+} from '@/lib/roadmapGraph';
 
-            <div className="flex flex-col">
-                <div className="flex items-center justify-between mb-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${data.phase === 'phase1' ? 'bg-green-100 text-green-700' :
-                        data.phase === 'phase2' ? 'bg-primary/10 text-primary' :
-                            'bg-secondary/10 text-secondary'
-                        }`}>
-                        {data.duration}
-                    </span>
-                </div>
-                <h3 className="font-bold text-foreground text-sm mb-1">{data.label}</h3>
-                <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-3">
-                    {data.goals.slice(0, 2).map((goal: string, i: number) => (
-                        <li key={i}>{goal}</li>
-                    ))}
-                    {data.goals.length > 2 && <li>+{data.goals.length - 2} more...</li>}
-                </ul>
-            </div>
+export type DiagramDetailSelection =
+  {
+    type: 'topic';
+    stageId: string;
+    areaId: string;
+    itemId: string;
+    title: string;
+    category: string;
+    description?: string;
+    skillTags?: string[];
+    prerequisites?: string[];
+    requiredSkills?: any[];
+    estimatedHours?: number;
+    personalization?: {
+      status?: string;
+      priority?: string;
+      reason?: string;
+      description?: string;
+    };
+    check?: boolean;
+  };
 
-            <Handle type="source" position={Position.Right} className="!bg-primary" />
+interface StageNodeData {
+  stageId: string;
+  title: string;
+  description: string;
+  index: number;
+  isExpanded: boolean;
+}
+
+interface PhaseNodeData { // Represents an Area now
+  areaId: string;
+  title: string;
+  description: string;
+  stageId: string;
+  isExpanded: boolean;
+}
+
+interface TopicNodeData {
+  itemId: string;
+  title: string;
+  category: 'skill' | 'concept' | 'project' | 'course';
+  description: string;
+  stageId: string;
+  areaId: string;
+  isActive?: boolean;
+  skillTags?: string[];
+  prerequisites?: string[];
+  requiredSkills?: any[];
+  estimatedHours?: number;
+  personalization?: {
+    status?: string;
+    priority?: string;
+    reason?: string;
+    description?: string;
+  };
+  check?: boolean;
+}
+
+interface TerminalNodeData {
+  label: string;
+  variant: 'start' | 'end';
+}
+
+function StageNode({ data }: NodeProps<StageNodeData>) {
+  return (
+    <div className="w-[500px] rounded-3xl border-2 border-primary/20 bg-card/50 shadow-xl backdrop-blur-sm overflow-hidden hover:border-primary/40 transition-colors group">
+      <div className="px-6 py-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-wider text-primary">
+          Stage {data.index}
+        </span>
+        <span className="text-xs font-medium text-muted-foreground">
+          {data.isExpanded ? 'Collapse' : 'Expand'}
+        </span>
+      </div>
+      <div className="p-6">
+        <h3 className="text-2xl font-bold text-foreground mb-2">{data.title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {data.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PhaseNode({ data }: NodeProps<PhaseNodeData>) {
+  return (
+    <div className="w-96 rounded-2xl border border-border bg-card shadow-lg overflow-hidden hover:shadow-xl transition-all group">
+      <div className="px-5 py-4 border-l-4 border-secondary">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-lg font-bold text-foreground group-hover:text-secondary transition-colors">
+            {data.title}
+          </h4>
+          <span className="text-xs text-muted-foreground">
+            {data.isExpanded ? '▼' : '▶'}
+          </span>
         </div>
-    );
-};
+        <p className="text-xs text-muted-foreground line-clamp-2">
+          {data.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TopicNode({ data }: NodeProps<TopicNodeData>) {
+  const getBadgeColor = (category: string) => {
+    switch (category) {
+      case 'skill': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'project': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'concept': return 'bg-amber-100 text-amber-700 border-amber-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'already_mastered': return 'bg-green-100 text-green-700 border-green-200';
+      case 'high_priority': return 'bg-red-100 text-red-700 border-red-200';
+      case 'medium_priority': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'low_priority': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'new_topic': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+      default: return null;
+    }
+  };
+
+  const statusColor = getStatusColor(data.personalization?.status);
+
+  return (
+    <div
+      className={`w-80 rounded-xl border bg-card shadow-sm transition-all ${
+        data.isActive 
+          ? 'border-primary shadow-lg ring-2 ring-primary/20 scale-105' 
+          : 'border-border hover:border-primary/30 hover:shadow-md'
+      } ${data.check ? 'opacity-60' : ''}`}
+    >
+      <div className="px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex gap-2 flex-wrap">
+            <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${getBadgeColor(data.category)}`}>
+              {data.category}
+            </span>
+            {statusColor && (
+               <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusColor}`}>
+                 {data.personalization?.status?.replace('_', ' ')}
+               </span>
+             )}
+          </div>
+          {data.estimatedHours && (
+             <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+               {data.estimatedHours}h
+             </span>
+           )}
+        </div>
+        <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-bold text-foreground leading-snug mb-2">
+              {data.title}
+            </p>
+            {data.check && (
+                <div className="text-green-500 shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+            )}
+        </div>
+        
+        {data.personalization?.reason && (
+            <p className="text-xs text-muted-foreground italic mb-2 border-l-2 border-primary/20 pl-2 line-clamp-3">
+                "{data.personalization.reason}"
+            </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TerminalNode({ data }: NodeProps<TerminalNodeData>) {
+  const isStart = data.variant === 'start';
+  const color = isStart ? 'var(--primary)' : 'var(--secondary)';
+  return (
+    <div className="flex items-center justify-center">
+      <div
+        className="h-24 w-24 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg border-4 border-white ring-2 ring-border uppercase tracking-wider"
+        style={{ backgroundColor: color }}
+      >
+        {data.label}
+      </div>
+    </div>
+  );
+}
 
 const nodeTypes = {
-    roadmapNode: RoadmapNode,
+  stage: StageNode,
+  phase: PhaseNode, // This is actually "Area" in the new data model
+  topic: TopicNode,
+  terminal: TerminalNode,
 };
 
 interface RoadmapFlowProps {
-    roadmapData: any;
+  roadmapData: any;
+  onSelectDetail?: (detail: DiagramDetailSelection | null) => void;
+  selectedItemId?: string | null;
 }
 
-export default function RoadmapFlow({ roadmapData }: RoadmapFlowProps) {
-    // Transform roadmap data into nodes and edges
-    const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
-        if (!roadmapData?.roadmap) return { nodes: [], edges: [] };
+// Helper to transform Personalized Roadmap to RoadmapData
+function transformPersonalizedRoadmap(roadmapDoc: any): RoadmapStage[] {
+  if (!roadmapDoc || !roadmapDoc.stages) return [];
 
-        const nodes: Node[] = [];
-        const edges: Edge[] = [];
-        let xPos = 0;
-        const xGap = 300;
+  return roadmapDoc.stages.map((stage: any, stageIndex: number) => {
+    const areas: RoadmapArea[] = [];
 
-        // Sort phases to ensure order
-        const phases = ['phase1', 'phase2', 'phase3'];
+    if (stage.areas) {
+      stage.areas.forEach((area: any, areaIndex: number) => {
+        const items: RoadmapItem[] = [];
 
-        phases.forEach((phaseKey, index) => {
-            const phase = roadmapData.roadmap[phaseKey];
-            if (!phase) return;
-
-            nodes.push({
-                id: phaseKey,
-                type: 'roadmapNode',
-                position: { x: xPos, y: 100 },
-                data: {
-                    label: phase.title,
-                    duration: phase.duration,
-                    goals: phase.goals,
-                    phase: phaseKey,
-                    isTarget: index === 0 // Highlight first phase as current/start
-                },
+        if (area.items) {
+          area.items.forEach((item: any, itemIndex: number) => {
+            items.push({
+              itemId: item.id || `item-${stageIndex}-${areaIndex}-${itemIndex}`,
+              type: (item.itemType as any) || 'skill',
+              category: (item.itemType as any) || 'skill',
+              title: item.name,
+              subtitle: item.personalization?.status ? item.personalization.status.replace('_', ' ') : 'Recommended',
+              description: item.description,
+              skillTags: item.skillTags,
+              prerequisites: item.prerequisites,
+              requiredSkills: item.requiredSkills,
+              estimatedHours: item.estimatedHours,
+              check: item.check,
+              personalization: {
+                ...item.personalization,
+                priority: item.personalization?.priority?.toString()
+              }
             });
+          });
+        }
 
-            if (index > 0) {
-                edges.push({
-                    id: `e-${phases[index - 1]}-${phaseKey}`,
-                    source: phases[index - 1],
-                    target: phaseKey,
-                    animated: true,
-                    style: { stroke: 'var(--primary)', strokeWidth: 2 },
-                    markerEnd: {
-                        type: MarkerType.ArrowClosed,
-                        color: 'var(--primary)',
-                    },
-                });
-            }
-
-            xPos += xGap;
+        areas.push({
+          areaId: area.id || `area-${stageIndex}-${areaIndex}`,
+          title: area.name,
+          description: area.description,
+          items
         });
-
-        return { nodes, edges };
-    }, [roadmapData]);
-
-    const [nodes, , onNodesChange] = useNodesState(initialNodes);
-    const [edges, , onEdgesChange] = useEdgesState(initialEdges);
-
-    if (!roadmapData) {
-        return (
-            <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                <p className="text-gray-500 font-medium">Select a career to view its roadmap</p>
-            </div>
-        );
+      });
     }
 
+    return {
+      stageId: stage.id || `stage-${stageIndex}`,
+      title: stage.name,
+      description: stage.description,
+      index: stage.orderIndex || stageIndex + 1,
+      areas
+    };
+  });
+}
+
+export default function RoadmapFlow({
+  roadmapData,
+  onSelectDetail,
+  selectedItemId,
+}: RoadmapFlowProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Track expanded states
+  const [expandedStageIds, setExpandedStageIds] = useState<string[]>([]);
+  const [expandedAreaIds, setExpandedAreaIds] = useState<string[]>([]);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+
+  // Transform data if needed
+  const transformedData = useMemo(() => {
+    if (Array.isArray(roadmapData)) return roadmapData as RoadmapStage[];
+    if (roadmapData?.stages) return transformPersonalizedRoadmap(roadmapData);
+    return [];
+  }, [roadmapData]);
+
+  // Sync activeItemId with selectedItemId prop and ensure visibility
+  useEffect(() => {
+    if (selectedItemId !== undefined) {
+      setActiveItemId(selectedItemId);
+
+      if (selectedItemId) {
+        // Find the item in transformedData to get its stageId and areaId
+        for (const stage of transformedData) {
+          for (const area of stage.areas) {
+            const item = area.items.find(i => i.itemId === selectedItemId);
+            if (item) {
+              // Expand stage if not already expanded
+              setExpandedStageIds(prev => 
+                prev.includes(stage.stageId) ? prev : [...prev, stage.stageId]
+              );
+              // Expand area if not already expanded
+              setExpandedAreaIds(prev => 
+                prev.includes(area.areaId) ? prev : [...prev, area.areaId]
+              );
+              return;
+            }
+          }
+        }
+      }
+    }
+  }, [selectedItemId, transformedData]);
+
+  // Initialize expansion
+  useEffect(() => {
+    if (transformedData.length > 0) {
+      // Expand first stage by default
+      setExpandedStageIds([transformedData[0].stageId]);
+      // Expand first area of first stage by default
+      if (transformedData[0].areas.length > 0) {
+        setExpandedAreaIds([transformedData[0].areas[0].areaId]);
+      }
+    }
+  }, [transformedData]);
+
+  const graph = useMemo(
+    () => generateRoadmapGraph(transformedData, expandedStageIds, expandedAreaIds),
+    [transformedData, expandedStageIds, expandedAreaIds]
+  );
+
+  useEffect(() => setIsMounted(true), []);
+
+  const nodes = useMemo(() => {
+    return graph.nodes.map((node) => {
+      if (node.type === 'topic') {
+        return {
+          ...node,
+          data: { 
+            ...(node.data as TopicNodeData), 
+            isActive: node.id === activeItemId 
+          },
+        };
+      }
+      return node;
+    });
+  }, [graph.nodes, activeItemId]);
+
+  const handleNodeClick = useCallback(
+    (_: MouseEvent, node: Node) => {
+      if (node.type === 'stage') {
+        const stageId = (node.data as StageNodeData).stageId;
+        setExpandedStageIds(prev => 
+          prev.includes(stageId) 
+            ? prev.filter(id => id !== stageId)
+            : [...prev, stageId]
+        );
+        return;
+      }
+
+      if (node.type === 'phase') { // Area node
+        const areaId = (node.data as PhaseNodeData).areaId;
+        setExpandedAreaIds(prev => 
+          prev.includes(areaId) 
+            ? prev.filter(id => id !== areaId)
+            : [...prev, areaId]
+        );
+        return;
+      }
+
+      if (node.type === 'topic') {
+        const data = node.data as TopicNodeData;
+        if (node.id === activeItemId) {
+          setActiveItemId(null);
+          onSelectDetail?.(null);
+          return;
+        }
+        setActiveItemId(node.id);
+        onSelectDetail?.({
+          type: 'topic',
+          stageId: data.stageId,
+          areaId: data.areaId,
+          itemId: data.itemId,
+          title: data.title,
+          category: data.category,
+          description: data.description,
+          skillTags: data.skillTags,
+          prerequisites: data.prerequisites,
+          requiredSkills: data.requiredSkills,
+          estimatedHours: data.estimatedHours,
+          personalization: data.personalization,
+          check: data.check
+        });
+        return;
+      }
+    },
+    [activeItemId, onSelectDetail]
+  );
+
+  if (!isMounted) {
     return (
-        <div className="h-[500px] w-full bg-gray-50/50 rounded-2xl border border-gray-200 overflow-hidden">
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={nodeTypes}
-            onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                zoomOnDoubleClick={false}
-                fitView
-                attributionPosition="bottom-right"
-            >
-                <Background color="#e0e7ff" gap={20} />
-                <Controls />
-            </ReactFlow>
-        </div>
+      <div className="w-full h-[600px] rounded-2xl border border-border bg-muted/10 animate-pulse" />
     );
+  }
+
+  return (
+    <div className="w-full h-[800px] rounded-2xl border border-border bg-slate-50/50 shadow-sm">
+      <ReactFlow
+        nodes={nodes}
+        edges={graph.edges}
+        nodeTypes={nodeTypes}
+        fitView
+        nodesDraggable={false}
+        nodesConnectable={false}
+        panOnDrag
+        panOnScroll
+        onNodeClick={handleNodeClick}
+        zoomOnDoubleClick={false}
+        minZoom={0.1}
+        maxZoom={1.5}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+      >
+        <MiniMap
+          pannable
+          zoomable
+          nodeBorderRadius={8}
+          nodeColor={(node) => {
+            switch (node.type) {
+              case 'stage': return '#e2e8f0';
+              case 'phase': return '#cbd5e1';
+              case 'topic': return '#94a3b8';
+              default: return '#64748b';
+            }
+          }}
+        />
+        <Controls />
+        <Background gap={24} color="#e2e8f0" />
+      </ReactFlow>
+    </div>
+  );
 }

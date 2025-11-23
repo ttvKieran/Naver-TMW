@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import CareerRoadmapDiagram, { DiagramDetailSelection } from "@/components/CareerRoadmapDiagram";
+import RoadmapFlow, { DiagramDetailSelection } from "@/components/RoadmapFlow";
 import type { RoadmapData } from "@/lib/roadmapGraph";
 
 interface RoadmapClientProps {
@@ -99,13 +99,13 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link
-              href="/career-advisor/results"
+              href="/dashboard"
               className="text-muted-foreground hover:text-primary font-medium inline-flex items-center transition-colors"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to Results
+              Back to Dashboard
             </Link>
             <h1 className="text-2xl font-bold text-foreground">
               {career.title} Roadmap
@@ -149,8 +149,8 @@ export default function RoadmapClient({ career, roadmap, studentId }: RoadmapCli
       <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Diagram */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-1">
-            <CareerRoadmapDiagram
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-1 h-[800px]">
+            <RoadmapFlow
               roadmapData={roadmap}
               onSelectDetail={handleDetailSelect}
               selectedItemId={selectedDetail?.itemId}

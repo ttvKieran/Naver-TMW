@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     console.log('Step 1: Predicting career using Generation Task AI...');
     let predictedCareer: string;
     try {
-      predictedCareer = await callGenerationTask(student.itSkill, student.softSkill);
+      predictedCareer = await callGenerationTask(student.itSkills, student.softSkills);
       console.log('✅ Career predicted:', predictedCareer);
     } catch (error) {
       console.error('Generation Task error:', error);
@@ -210,10 +210,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update student với career mới
-    student.career.targetCareerID = mapCareerToJobFile(predictedCareer);
+    student.career.targetCareerId = mapCareerToJobFile(predictedCareer);
     student.career.actualCareer = predictedCareer;
     student.career.targetConfidence = 0.85;
-    student.aiCareerRecommendation = careerRecommendation;
+    (student as any).aiCareerRecommendation = careerRecommendation;
 
     // Step 3: Sync user to clova-rag-roadmap via sync-user API
     console.log('Step 3: Syncing user to clova-rag-roadmap...');
@@ -222,11 +222,11 @@ export async function POST(request: NextRequest) {
       full_name: student.fullName,
       current_semester: student.academic.currentSemester,
       gpa: student.academic.gpa,
-      target_career_id: student.career.targetCareerID,
+      target_career_id: student.career.targetCareerId,
       actual_career: student.career.actualCareer,
       time_per_week_hours: student.availability.timePerWeekHours,
-      it_skills: student.itSkill,
-      soft_skills: student.softSkill,
+      it_skills: student.itSkills,
+      soft_skills: student.softSkills,
       skills: {
         technical: student.skills.technical instanceof Map 
           ? Object.fromEntries(student.skills.technical) 
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
         })),
       },
       career: {
-        target_career_id: student.career.targetCareerID,
+        target_career_id: student.career.targetCareerId,
         actual_career: student.career.actualCareer,
         target_confidence: student.career.targetConfidence,
       },
@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id: student.studentCode,
-        jobname: student.career.targetCareerID,
+        jobname: student.career.targetCareerId,
       }),
     });
 
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
     // Delete old roadmap if exists
     await PersonalizedRoadmap.deleteMany({ studentId: student._id });
     
-    // Add orderIndex to stages if missing
+    // Add orderIndex to stages if missing and map snake_case to camelCase
     const processedStages = roadmapData.stages?.map((stage: any, index: number) => ({
       ...stage,
       orderIndex: stage.orderIndex ?? index,
@@ -305,6 +305,10 @@ export async function POST(request: NextRequest) {
         items: area.items?.map((item: any, itemIndex: number) => ({
           ...item,
           orderIndex: item.orderIndex ?? itemIndex,
+          personalization: item.personalization ? {
+            ...item.personalization,
+            personalizedDescription: item.personalization.personalized_description || item.personalization.personalizedDescription
+          } : undefined
         })),
       })),
     })) || [];
@@ -313,7 +317,7 @@ export async function POST(request: NextRequest) {
       studentId: student._id,
       roadmapId: null,
       
-      careerID: roadmapData.career_id || student.career.targetCareerID,
+      careerID: roadmapData.career_id || student.career.targetCareerId,
       careerName: roadmapData.career_name || student.career.actualCareer,
       
       description: roadmapData.description || `Personalized learning roadmap for ${student.career.actualCareer}`,
