@@ -11,15 +11,21 @@
 5. Copy connection string
 ```
 
-### 2️⃣ Deploy Python API lên Render (10 phút)
+### 2️⃣ Deploy Python API lên Vercel (5 phút) 🆓
 ```
-1. Vào render.com
-2. New → Web Service
-3. Connect GitHub repo
-4. Root: clova-rag-roadmap
-5. Start: uvicorn app.personalize_api:app --host 0.0.0.0 --port $PORT
-6. Deploy → đợi build
-7. Copy URL: https://your-app.onrender.com
+1. Vào vercel.com
+2. New → Project
+3. Import repo: ttvKieran/Naver-TMW
+4. Root Directory: clova-rag-roadmap
+5. Framework: Other
+6. Deploy → đợi 2-3 phút
+7. Copy URL: https://your-api.vercel.app
+```
+
+**Hoặc dùng CLI:**
+```bash
+cd clova-rag-roadmap
+vercel --prod
 ```
 
 ### 3️⃣ Deploy Next.js lên Vercel (5 phút)
@@ -31,7 +37,7 @@
    - NEXTAUTH_SECRET=random-32-char-string
    - NEXTAUTH_URL=https://your-app.vercel.app
    - NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
-   - PYTHON_API_URL=https://your-app.onrender.com
+   - PYTHON_API_URL=https://your-api.vercel.app
    - NCP_CLOVASTUDIO_API_KEY=your-key
    - NCP_APIGW_API_KEY=your-key
    - NCP_REQUEST_ID=your-id
@@ -68,7 +74,7 @@ uvicorn app.personalize_api:app --reload --port 8001
 - [ ] NEXTAUTH_SECRET generated (32+ chars)
 - [ ] NCP API keys ready
 - [ ] Code pushed to GitHub
-- [ ] Python API deployed to Render
+- [ ] Python API deployed to Vercel
 - [ ] Next.js deployed to Vercel
 - [ ] Environment variables configured
 - [ ] Test registration works
@@ -83,7 +89,9 @@ uvicorn app.personalize_api:app --reload --port 8001
 ## 💰 Cost (All Free Tier)
 
 - MongoDB Atlas M0: FREE (512MB)
-- Render Free: FREE (750hrs/month)
-- Vercel Hobby: FREE (100GB bandwidth)
+- Vercel (Next.js): FREE (100GB bandwidth)
+- Vercel (Python API): FREE (100 hrs execution)
 
 **Total: $0/month** 🎉
+
+Cả Next.js và Python API đều trên Vercel - quản lý dễ dàng!
