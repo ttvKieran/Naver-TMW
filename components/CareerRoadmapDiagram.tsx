@@ -29,11 +29,13 @@ export type DiagramDetailSelection =
     prerequisites?: string[];
     requiredSkills?: any[];
     estimatedHours?: number;
-    priority?: string;
-    reason?: string;
-    advice?: string;
+    personalization?: {
+      status?: string;
+      priority?: string;
+      reason?: string;
+      description?: string;
+    };
     check?: boolean;
-    status?: string;
   };
 
 interface StageNodeData {
@@ -64,11 +66,13 @@ interface TopicNodeData {
   prerequisites?: string[];
   requiredSkills?: any[];
   estimatedHours?: number;
-  priority?: string;
-  reason?: string;
-  advice?: string;
+  personalization?: {
+    status?: string;
+    priority?: string;
+    reason?: string;
+    description?: string;
+  };
   check?: boolean;
-  status?: string;
 }
 
 interface TerminalNodeData {
@@ -127,16 +131,18 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
     }
   };
 
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'already_mastered': return 'bg-green-100 text-green-700 border-green-200';
       case 'high_priority': return 'bg-red-100 text-red-700 border-red-200';
       case 'medium_priority': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'low_priority': return 'bg-green-100 text-green-700 border-green-200';
+      case 'low_priority': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'new_topic': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       default: return null;
     }
   };
 
-  const priorityColor = getPriorityColor(data.priority);
+  const statusColor = getStatusColor(data.personalization?.status);
 
   return (
     <div
@@ -144,19 +150,19 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
         data.isActive 
           ? 'border-primary shadow-lg ring-2 ring-primary/20 scale-105' 
           : 'border-border hover:border-primary/30 hover:shadow-md'
-      }`}
+      } ${data.check ? 'opacity-60' : ''}`}
     >
       <div className="px-4 py-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex gap-1">
+          <div className="flex gap-2 flex-wrap">
             <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${getBadgeColor(data.category)}`}>
               {data.category}
             </span>
-            {priorityColor && (
-              <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${priorityColor}`}>
-                {data.priority?.replace('_', ' ')}
-              </span>
-            )}
+            {statusColor && (
+               <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusColor}`}>
+                 {data.personalization?.status?.replace('_', ' ')}
+               </span>
+             )}
           </div>
           {data.estimatedHours && (
              <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
@@ -165,15 +171,34 @@ function TopicNode({ data }: NodeProps<TopicNodeData>) {
              </span>
            )}
         </div>
-        <p className="text-sm font-bold text-foreground leading-snug mb-2">
-          {data.title}
-        </p>
-        {data.check && (
-          <div className="mt-1 flex items-center gap-1 text-xs text-green-600 font-medium">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-            Recommended
-          </div>
+        <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-bold text-foreground leading-snug mb-2">
+              {data.title}
+            </p>
+            {data.check && (
+                <div className="text-green-500 shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+            )}
+        </div>
+        
+        {data.personalization?.reason && (
+            <p className="text-xs text-muted-foreground italic mb-2 border-l-2 border-primary/20 pl-2 line-clamp-3">
+                "{data.personalization.reason}"
+            </p>
         )}
+        {/* {data.skillTags && data.skillTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {data.skillTags.slice(0, 3).map(tag => (
+              <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-muted/50 border border-border rounded text-muted-foreground">
+                {tag}
+              </span>
+            ))}
+            {data.skillTags.length > 3 && (
+              <span className="text-[10px] px-1.5 py-0.5 text-muted-foreground">+{data.skillTags.length - 3}</span>
+            )}
+          </div>
+        )} */}
       </div>
     </div>
   );
@@ -322,11 +347,8 @@ export default function CareerRoadmapDiagram({
           prerequisites: data.prerequisites,
           requiredSkills: data.requiredSkills,
           estimatedHours: data.estimatedHours,
-          priority: data.priority,
-          reason: data.reason,
-          advice: data.advice,
-          check: data.check,
-          status: data.status
+          personalization: data.personalization,
+          check: data.check
         });
         return;
       }

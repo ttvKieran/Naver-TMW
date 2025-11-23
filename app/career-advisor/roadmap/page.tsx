@@ -2,9 +2,7 @@ import { Suspense } from "react";
 import RoadmapClient from "./RoadmapClient";
 import type { RoadmapData, RoadmapStage, RoadmapArea, RoadmapItem } from "@/lib/roadmapGraph";
 import connectDB from "@/lib/mongodb/connection";
-import { Career, Roadmap } from "@/lib/mongodb/models";
-import { PersonalizedRoadmap } from "@/lib/mongodb/models/PersonalizedRoadmap";
-import { Student } from "@/lib/mongodb/models/Student";
+import { Career, Roadmap, PersonalizedRoadmap } from "@/lib/mongodb/models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -21,34 +19,22 @@ function transformPersonalizedRoadmap(roadmapDoc: any): RoadmapData {
 
         if (area.items) {
           area.items.forEach((item: any, itemIndex: number) => {
-            const pStatus = item.personalization?.status;
-            let priority = undefined;
-            let status: 'available' | 'already_mastered' = 'available';
-
-            if (['high_priority', 'medium_priority', 'low_priority', 'optional'].includes(pStatus)) {
-              priority = pStatus;
-            } else if (pStatus === 'already_mastered') {
-              status = 'already_mastered';
-            }
-
             items.push({
               itemId: item.id || `item-${stageIndex}-${areaIndex}-${itemIndex}`,
-              type: item.itemType || 'skill',
-              category: item.itemType === 'course' ? 'course' : item.itemType === 'project' ? 'project' : 'skill',
+              type: (item.itemType as any) || 'skill',
+              category: (item.itemType as any) || 'skill',
               title: item.name,
-              subtitle: priority ? priority.replace('_', ' ') : 'recommended',
+              subtitle: item.personalization?.status ? item.personalization.status.replace('_', ' ') : 'Recommended',
               description: item.description,
-              status: status,
               skillTags: item.skillTags,
               prerequisites: item.prerequisites,
               requiredSkills: item.requiredSkills,
               estimatedHours: item.estimatedHours,
-              
-              // Personalization
-              priority: priority,
-              reason: item.personalization?.reason,
-              advice: item.personalization?.personalizedDescription,
-              check: item.check
+              check: item.check,
+              personalization: {
+                ...item.personalization,
+                priority: item.personalization?.priority?.toString()
+              }
             });
           });
         }
@@ -207,59 +193,35 @@ export default async function RoadmapPage({
   let isPersonalized = false;
 
   if (studentId) {
-    const student = await Student.findById(studentId);
-    if (student) {
-      // Try to find by careerID (e.g. "machine_learning") or careerName
-      // We need to map the career title to the ID used in PersonalizedRoadmap
-      // Or just search by careerName if it matches
-      
-      const personalizedDoc = await PersonalizedRoadmap.findOne({
-        studentId: student._id,
-        $or: [
-          { careerName: careerDoc.title },
-          { careerID: careerDoc.careerId } // Assuming careerId in Career matches careerID in PersonalizedRoadmap
-        ]
-      }).lean();
+    const personalizedDoc = await PersonalizedRoadmap.findOne({
+      studentId: studentId,
+      careerID: careerDoc.careerId
+    }).sort({ generatedAt: -1 }).lean();
 
-      if (personalizedDoc) {
-        console.log("Found personalized roadmap for", studentId);
-        roadmap = transformPersonalizedRoadmap(personalizedDoc);
-        isPersonalized = true;
-      }
+    if (personalizedDoc) {
+      roadmap = transformPersonalizedRoadmap(personalizedDoc);
+      isPersonalized = true;
     }
   }
 
-  // Fallback to generic roadmap
+  // Fallback to base roadmap if no personalized roadmap found
   if (!roadmap) {
     const roadmapDoc = await Roadmap.findOne({ careerId: careerDoc._id })
       .populate('levels.phases.skillsToLearn.skillId')
       .populate('levels.phases.recommendedCourses.courseId')
       .lean();
-      
-    if (roadmapDoc) {
-      roadmap = transformRoadmap(roadmapDoc);
-    }
+    
+    roadmap = transformRoadmap(roadmapDoc);
   }
 
-  if (!roadmap) {
-     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Roadmap Not Found</h2>
-          <p className="text-muted-foreground mb-4">We couldn't find a roadmap for "{careerParam}".</p>
-          <a href="/career-advisor/results" className="text-primary hover:underline">Go back to Results</a>
-        </div>
-      </div>
-    );
-  }
-  
   // Transform Career for Client Component
   const transformedCareer = {
     title: careerDoc.title,
     duration: careerDoc.overview?.timeToProficiency || "Unknown Duration",
     level: careerDoc.overview?.difficulty || "All Levels",
     skills: careerDoc.requiredSkills?.map((s: any) => s.skillId?.name) || [],
-    certifications: careerDoc.certifications || []
+    certifications: careerDoc.certifications || [],
+    isPersonalized // Pass this flag to client
   };
 
   return (
@@ -267,7 +229,6 @@ export default async function RoadmapPage({
       career={transformedCareer} 
       roadmap={roadmap} 
       studentId={studentId}
-      isPersonalized={isPersonalized}
     />
   );
 }

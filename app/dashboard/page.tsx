@@ -3,104 +3,187 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import StudentDashboard from '@/components/StudentDashboard';
-import connectDB from '@/lib/mongodb/connection';
-import { Student } from '@/lib/mongodb/models/Student';
-import { Career } from '@/lib/mongodb/models/Career';
+import Navbar from '@/components/Navbar';
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}) {
-  const params = await searchParams;
-  const studentId = params.id || 'STU001';
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
 
-  // Fetch student data from database
+  if (!session || !session.user) {
+    redirect('/login');
+  }
+
+  const { studentId } = session.user;
+
+  if (!studentId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center pt-20">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Student profile not found
+            </h1>
+            <Link href="/register" className="text-blue-600 hover:underline">
+              Complete your registration →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch student data
   let student: any = null;
   let dbStudent: any = null;
   let hotCareers: any[] = [];
-  let allRoadmaps: any[] = [];
+  let currentRoadmap: any = null;
+  let currentCareerId: string | null = null;
 
   try {
-    await connectDB();
-    
-    // Fetch student data
-    const dbStudent = await Student.findOne({ studentCode: studentId }).lean();
+    const studentRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/students/${studentId}`,
+      { cache: 'no-store' }
+    );
+    const studentData = await studentRes.json();
 
+    if (studentData.student) {
+      dbStudent = studentData.student;
+
+      student = {
+        id: dbStudent.studentCode,
+        studentDbId: dbStudent._id,
+        name: dbStudent.fullName,
+        university: dbStudent.university || 'Unknown University',
+        major: dbStudent.major || 'Unknown Major',
+        actualCareer:
+          dbStudent.career?.actualCareer ||
+          dbStudent.career?.targetCareerID ||
+          'Backend Developer',
+        predictedCareer: dbStudent.career?.targetCareerID,
+        targetConfidence: dbStudent.career?.targetConfidence,
+        aiCareerRecommendation: dbStudent.aiCareerRecommendation,
+        gpa: dbStudent.academic?.gpa || 3.0,
+        currentSemester: dbStudent.academic?.currentSemester,
+        personality: {
+          mbti: dbStudent.personality?.mbti || 'ISTJ',
+          traits: dbStudent.personality?.traits || {
+            analytical: 5,
+            creative: 5,
+            teamwork: 5,
+            leadership: 5,
+            technical: 5,
+          },
+        },
+        skills: {} as Record<string, number>,
+        interests: dbStudent.interests || [],
+        itSkills: dbStudent.itSkill || [],
+        softSkills: dbStudent.softSkill || [],
+      };
+
+      // Process skills
+      if (dbStudent.skills?.technical) {
+        if (dbStudent.skills.technical instanceof Map) {
+          dbStudent.skills.technical.forEach((level: number, skillName: string) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level;
+          });
+        } else {
+          Object.entries(dbStudent.skills.technical).forEach(([skillName, level]) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level as number;
+          });
+        }
+      }
+
+      if (dbStudent.skills?.general) {
+        if (dbStudent.skills.general instanceof Map) {
+          dbStudent.skills.general.forEach((level: number, skillName: string) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level;
+          });
+        } else {
+          Object.entries(dbStudent.skills.general).forEach(([skillName, level]) => {
+            student.skills[skillName.toLowerCase().replace(/\s+/g, '')] = level as number;
+          });
+        }
+      }
+
+      if (Object.keys(student.skills).length === 0) {
+        student.skills = {
+          programming: 7,
+          problemSolving: 7,
+          communication: 6,
+          systemDesign: 8,
+          dataAnalysis: 5,
+        };
+      }
+    }
+
+    // Fetch careers
+    const careersRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/careers`,
+      { cache: 'no-store' }
+    );
+    const careersData = await careersRes.json();
+    hotCareers = careersData.careers?.slice(0, 6) || [];
+
+    const currentCareer = careersData.careers?.find(
+      (c: any) => c.title.toLowerCase() === student?.actualCareer?.toLowerCase()
+    );
+
+    if (currentCareer) {
+      currentCareerId = currentCareer._id;
+    }
+
+    // Fetch personalized roadmap
     if (dbStudent) {
-      // Transform database student to dashboard format
-      // We can pass the dbStudent mostly as is, but need to handle serialization of ObjectIds
-      student = JSON.parse(JSON.stringify(dbStudent));
-    } else {
-      console.warn(`Student ${studentId} not found`);
-    }
+      try {
+        const personalizedRoadmapRes = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/personalized-roadmap?studentId=${
+dbStudent._id}`,
+          { cache: 'no-store' }
+        );
 
-    // Fetch careers (which serve as roadmaps source in this context)
-    const dbCareers = await Career.find({}).lean();
-    
-    if (dbCareers) {
-        // Serialize ObjectIds to strings
-        const serializedCareers = JSON.parse(JSON.stringify(dbCareers));
-        hotCareers = serializedCareers.slice(0, 6);
-        allRoadmaps = serializedCareers;
+        if (personalizedRoadmapRes.ok) {
+          const personalizedData = await personalizedRoadmapRes.json();
+          const roadmap = personalizedData.roadmap;
+          currentRoadmap = {
+            _id: roadmap._id,
+            careerName: roadmap.careerName,
+            description: roadmap.description,
+            generatedAt: roadmap.generatedAt,
+            stagesCount: roadmap.stages?.length || 0,
+          };
+        }
+      } catch (err) {
+        console.error('Error fetching roadmap:', err);
+      }
     }
-
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
-    // Fallback to hardcoded data if DB fails
-    student = {
-      studentCode: "STU001",
-      fullName: "Vũ Thu Hiếu",
-      academic: {
-        currentSemester: 5,
-        gpa: 3.19,
-        courses: []
-      },
-      career: {
-        actualCareer: "Backend Developer"
-      },
-      availability: {
-        timePerWeekHours: 8
-      },
-      skills: {
-        technical: { python: 4, javascript: 4 },
-        general: { communication: 8 }
-      },
-      interests: ["web_dev"],
-      projects: []
-    };
+    console.error('Error loading dashboard:', error);
+  }
+
+  if (!student) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center pt-20">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Unable to load student data
+            </h1>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 group">
-            <img src="/leopath.png" alt="Leopath Logo" className="w-10 h-10"/>
-            <div>
-              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none group-hover:text-primary transition-colors">Leopath</h1>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Dashboard</p>
-            </div>
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg border border-border">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-xs font-medium text-muted-foreground">System Online</span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm border border-primary/20">
-              {student?.name?.charAt(0) || 'U'}
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <Navbar />
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <StudentDashboard 
-          initialStudent={student}
+        <StudentDashboard
+          student={student}
           hotCareers={hotCareers}
-          allRoadmaps={allRoadmaps} 
+          currentRoadmap={currentRoadmap}
+          currentCareerId={currentCareerId}
         />
       </main>
     </div>

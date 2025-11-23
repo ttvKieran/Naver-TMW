@@ -92,12 +92,12 @@ export default function MyRoadmapPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Đang tải roadmap...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground font-medium">Loading your journey...</p>
           </div>
         </div>
       </div>
@@ -105,180 +105,46 @@ export default function MyRoadmapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-background selection:bg-primary/20">
       <Navbar />
       
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {!roadmap || error ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
-              <span className="text-4xl">📋</span>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">My Learning Path</h1>
+            <p className="text-muted-foreground mt-1">Track your progress and master new skills</p>
+          </div>
+          
+          {roadmap && (
+            <div className="flex items-center gap-3 bg-card px-4 py-2 rounded-full border border-border shadow-sm">
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border-2 border-card text-xs font-bold text-primary">
+                  {roadmap.stages?.length || 0}
+                </div>
+              </div>
+              <span className="text-sm font-medium text-foreground">Stages to complete</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Chưa có roadmap cá nhân hóa
-            </h1>
-            <p className="text-gray-600 mb-8">
-              Roadmap sẽ được tạo tự động sau khi bạn hoàn tất đăng ký và cập nhật profile
-            </p>
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg font-semibold"
+          )}
+        </div>
+
+        {error ? (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h3 className="text-lg font-bold text-red-900 mb-2">Unable to load roadmap</h3>
+            <p className="text-red-700 mb-6">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
             >
-              Cập nhật Profile →
-            </Link>
+              Try Again
+            </button>
           </div>
         ) : (
-          <div>
-            <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                    <span>✨</span>
-                    Lộ trình cá nhân hóa bởi AI
-                  </div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                    {roadmap.careerName}
-                  </h1>
-                  <p className="text-gray-600 text-lg">{roadmap.description}</p>
-                </div>
-                
-                {/* View Mode Toggle */}
-                <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                      viewMode === 'list'
-                        ? 'bg-white text-purple-600 shadow'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    📋 Danh sách
-                  </button>
-                  <button
-                    onClick={() => setViewMode('flow')}
-                    className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                      viewMode === 'flow'
-                        ? 'bg-white text-purple-600 shadow'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    🎨 Flow Diagram
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-6 flex gap-4 text-sm flex-wrap">
-                <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg font-semibold">
-                  {roadmap.stages?.length || 0} giai đoạn
-                </div>
-                {(() => {
-                  const totalItems = roadmap.stages?.reduce((sum: number, stage: any) => 
-                    sum + stage.areas?.reduce((areaSum: number, area: any) => 
-                      areaSum + (area.items?.length || 0), 0
-                    ), 0
-                  ) || 0;
-                  const completedItems = roadmap.stages?.reduce((sum: number, stage: any) => 
-                    sum + stage.areas?.reduce((areaSum: number, area: any) => 
-                      areaSum + (area.items?.filter((item: any) => item.check).length || 0), 0
-                    ), 0
-                  ) || 0;
-                  const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-                  
-                  return (
-                    <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
-                      ✓ {completedItems}/{totalItems} hoàn thành ({percentage}%)
-                    </div>
-                  );
-                })()}
-                {roadmap.generatedAt && (
-                  <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
-                    {new Date(roadmap.generatedAt).toLocaleDateString('vi-VN')}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Conditional Rendering based on View Mode */}
-            {viewMode === 'flow' ? (
-              <RoadmapFlow roadmap={roadmap} onToggleItem={handleToggleItem} />
-            ) : (
-              /* Stages - List View */
-              <div className="space-y-4">
-              {roadmap.stages?.map((stage: any, idx: number) => (
-                <div key={idx} className="bg-white rounded-xl shadow-md p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">{stage.name}</h2>
-                      {stage.recommendedSemesters && stage.recommendedSemesters.length > 0 && (
-                        <p className="text-gray-600">
-                          Học kỳ đề xuất: {stage.recommendedSemesters.join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Areas */}
-                  <div className="space-y-4 ml-16">
-                    {stage.areas?.map((area: any, areaIdx: number) => (
-                      <div key={areaIdx} className="border-l-4 border-purple-400 pl-4">
-                        <h3 className="text-xl font-bold text-gray-900 mb-3">{area.name}</h3>
-                        <div className="grid gap-3">
-                          {area.items?.map((item: any, itemIdx: number) => {
-                            const statusColors = {
-                              already_mastered: 'bg-green-50 border-green-300',
-                              review_needed: 'bg-yellow-50 border-yellow-300',
-                              new_topic: 'bg-blue-50 border-blue-300',
-                            };
-                            const status = item.personalization?.status || 'new_topic';
-
-                            return (
-                              <div
-                                key={itemIdx}
-                                className={`p-4 rounded-lg border-2 ${statusColors[status as keyof typeof statusColors]} transition-all`}
-                              >
-                                <div className="flex items-start gap-3 mb-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={item.check || false}
-                                    onChange={() => handleToggleItem(idx, areaIdx, itemIdx)}
-                                    className="w-5 h-5 mt-0.5 text-purple-600 bg-white border-gray-300 rounded focus:ring-purple-500 focus:ring-2 cursor-pointer flex-shrink-0"
-                                  />
-                                  <div className="flex-1 flex items-start justify-between">
-                                    <h4 className={`font-semibold ${item.check ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                                      {item.title}
-                                    </h4>
-                                    {item.estimatedHours > 0 && (
-                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2 flex-shrink-0">
-                                        ⏱️ {item.estimatedHours}h
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {item.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-                                )}
-                                {item.personalization?.personalizedDescription && (
-                                  <div className="mt-2 p-2 bg-purple-50 rounded text-sm">
-                                    <span className="font-semibold text-purple-900">💡 AI: </span>
-                                    <span className="text-purple-800">
-                                      {item.personalization.personalizedDescription}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              </div>
-            )}
+          <div className="bg-card rounded-3xl shadow-sm border border-border p-1 overflow-hidden h-[800px]">
+            <RoadmapFlow roadmapData={roadmap} />
           </div>
         )}
       </main>

@@ -1317,5 +1317,47 @@
     "availability": {
       "time_per_week_hours": 10
     }
+  },
+  {
+    "user_id": "69231b101da4f7c25f8238d2",
+    "full_name": "Tran Oi",
+    "current_semester": 1,
+    "gpa": 3.5,
+    "target_career_id": "data_analyst",
+    "actual_career": "Data Analyst",
+    "time_per_week_hours": 10,
+    "it_skills": [
+      "advanced analytical skills",
+      "ab and multivariate testing"
+    ],
+    "soft_skills": [
+      "ability to adapt to change quickly",
+      "ability to anticipate needs and shift priorities quickly"
+    ],
+    "skills": {
+      "technical": {
+        "advanced_analytical_skills": 5,
+        "ab_and_multivariate_testing": 5
+      },
+      "general": {
+        "ability_to_adapt_to_change_quickly": 5,
+        "ability_to_anticipate_needs_and_shift_priorities_quickly": 5
+      }
+    },
+    "interests": [],
+    "projects": [],
+    "academic": {
+      "current_semester": 1,
+      "gpa": 3.5,
+      "courses": []
+    },
+    "career": {
+      "target_career_id": "data_analyst",
+      "actual_career": "Data Analyst",
+      "target_confidence": 0.8
+    },
+    "availability": {
+      "time_per_week_hours": 10
+    }
   }
 ]

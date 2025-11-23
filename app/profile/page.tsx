@@ -82,7 +82,7 @@ export default function ProfilePage() {
       });
 
       if (res.ok) {
-        setMessage('✅ Profile updated successfully!');
+        setMessage('Profile updated successfully!');
         fetchProfile();
       } else {
         setMessage('❌ Failed to update profile');
@@ -115,7 +115,7 @@ export default function ProfilePage() {
         setTimeout(() => router.push('/my-roadmap'), 2000);
       } else {
         const error = await res.json();
-        setMessage(`❌ ${error.error}`);
+        setMessage(`${error.error}`);
       }
     } catch (error) {
       setMessage('❌ Error regenerating roadmap');
@@ -145,187 +145,246 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center pt-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground font-medium">Loading profile...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-background selection:bg-primary/20">
       <Navbar />
       
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+        {/* Profile Header */}
+        <div className="bg-card rounded-3xl shadow-sm border border-border p-8 flex flex-col md:flex-row items-center gap-8">
+          <div className="relative">
+            <div className="w-32 h-32 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-lg shadow-primary/20">
               {session?.user?.name?.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{session?.user?.name}</h1>
-              <p className="text-gray-600">{session?.user?.studentCode}</p>
-              <p className="text-sm text-gray-500">{session?.user?.email}</p>
+            <div className="absolute bottom-0 right-0 w-8 h-8 bg-green-500 border-4 border-card rounded-full"></div>
+          </div>
+          
+          <div className="text-center md:text-left flex-1">
+            <h1 className="text-3xl font-bold text-foreground mb-2">{session?.user?.name}</h1>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-muted-foreground">
+              <span className="bg-muted px-3 py-1 rounded-full text-sm font-medium border border-border">
+                {session?.user?.studentCode}
+              </span>
+              <span className="hidden md:inline">•</span>
+              <span>{session?.user?.email}</span>
             </div>
           </div>
 
-          {message && (
-            <div className={`mb-6 p-4 rounded-lg ${message.includes('✅') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-              {message}
-            </div>
-          )}
+          <div className="flex gap-3">
+            <button
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
 
-          <div className="space-y-6">
-            {/* Basic Info */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
-                <input
-                  type="text"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
+        {message && (
+          <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${
+            message.includes('✅') 
+              ? 'bg-green-50 border-green-100 text-green-800' 
+              : 'bg-red-50 border-red-100 text-red-800'
+          }`}>
+            <span className="text-xl">{message.includes('✅') ? '🎉' : '❌'}</span>
+            <p className="font-medium">{message}</p>
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Left Column: Personal & Academic */}
+          <div className="md:col-span-2 space-y-8">
+            <section className="bg-card rounded-3xl shadow-sm border border-border p-8">
+              <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-lg">🎓</span>
+                Academic Information
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="Your full name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">University</label>
+                  <input
+                    type="text"
+                    value={formData.university}
+                    onChange={(e) => setFormData({ ...formData, university: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="University name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Major</label>
+                  <input
+                    type="text"
+                    value={formData.major}
+                    onChange={(e) => setFormData({ ...formData, major: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="Your major"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">GPA</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="4"
+                      value={formData.gpa}
+                      onChange={(e) => setFormData({ ...formData, gpa: parseFloat(e.target.value) })}
+                      className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Semester</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={formData.currentSemester}
+                      onChange={(e) => setFormData({ ...formData, currentSemester: parseInt(e.target.value) })}
+                      className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                  </div>
+                </div>
               </div>
+            </section>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Trường</label>
-                <input
-                  type="text"
-                  value={formData.university}
-                  onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+            <section className="bg-card rounded-3xl shadow-sm border border-border p-8">
+              <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-lg">⚡</span>
+                Skills & Interests
+              </h2>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ngành học</label>
-                <input
-                  type="text"
-                  value={formData.major}
-                  onChange={(e) => setFormData({ ...formData, major: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">IT Skills</label>
+                  <SearchableSkillInput
+                    skillType="it"
+                    selectedSkills={formData.itSkills}
+                    onSkillsChange={(skills) =>
+                      setFormData({ ...formData, itSkills: skills })
+                    }
+                    placeholder="Add technical skills (e.g. React, Python)..."
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">GPA</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="4"
-                  value={formData.gpa}
-                  onChange={(e) => setFormData({ ...formData, gpa: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Soft Skills</label>
+                  <SearchableSkillInput
+                    skillType="soft"
+                    selectedSkills={formData.softSkills}
+                    onSkillsChange={(skills) =>
+                      setFormData({ ...formData, softSkills: skills })
+                    }
+                    placeholder="Add soft skills (e.g. Leadership, Communication)..."
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Học kỳ hiện tại</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={formData.currentSemester}
-                  onChange={(e) => setFormData({ ...formData, currentSemester: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* IT Skills */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">IT Skills</label>
-              <SearchableSkillInput
-                skillType="it"
-                selectedSkills={formData.itSkills}
-                onSkillsChange={(skills) =>
-                  setFormData({ ...formData, itSkills: skills })
-                }
-                placeholder="Tìm kiếm IT skills (Python, Java, React...)"
-              />
-            </div>
-
-            {/* Soft Skills */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Soft Skills</label>
-              <SearchableSkillInput
-                skillType="soft"
-                selectedSkills={formData.softSkills}
-                onSkillsChange={(skills) =>
-                  setFormData({ ...formData, softSkills: skills })
-                }
-                placeholder="Tìm kiếm soft skills (teamwork, communication...)"
-              />
-            </div>
-
-            {/* Interests */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sở thích</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={newInterest}
-                  onChange={(e) => setNewInterest(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addInterest()}
-                  placeholder="Thêm sở thích..."
-                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={addInterest}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                >
-                  Thêm
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formData.interests.map((interest, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full"
-                  >
-                    {interest}
-                    <button onClick={() => removeInterest(idx)} className="hover:text-red-600">
-                      ×
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Interests</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newInterest}
+                      onChange={(e) => setNewInterest(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addInterest()}
+                      placeholder="Add an interest..."
+                      className="flex-1 px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                    <button
+                      onClick={addInterest}
+                      className="px-6 py-3 bg-secondary text-secondary-foreground rounded-xl font-bold hover:bg-secondary/90 transition-colors"
+                    >
+                      Add
                     </button>
-                  </span>
-                ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.interests.map((interest, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1.5 rounded-lg font-medium border border-secondary/20"
+                      >
+                        {interest}
+                        <button 
+                          onClick={() => removeInterest(idx)} 
+                          className="hover:text-red-600 w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-100 transition-colors"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </section>
+          </div>
 
-            {/* Actions */}
-            <div className="flex gap-4 pt-6 border-t">
-              <button
-                onClick={handleSaveProfile}
-                disabled={saving}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg font-semibold disabled:opacity-50"
-              >
-                {saving ? 'Đang lưu...' : 'Lưu thông tin'}
-              </button>
-
+          {/* Right Column: Actions */}
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-3xl border border-primary/10 p-6 sticky top-24">
+              <h3 className="text-lg font-bold text-foreground mb-4">Roadmap Settings</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Need a fresh start? You can regenerate your learning roadmap based on your updated profile.
+              </p>
+              
               <button
                 onClick={handleRegenerateRoadmap}
                 disabled={regenerating}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg font-semibold disabled:opacity-50"
+                className="w-full py-4 bg-white border-2 border-primary/20 text-primary rounded-xl font-bold hover:bg-primary/5 hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
-                {regenerating ? 'Đang tạo...' : '✨ Tạo lại Roadmap'}
+                {regenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <span className="group-hover:rotate-180 transition-transform duration-500">↻</span>
+                    Regenerate Roadmap
+                  </>
+                )}
               </button>
-            </div>
-
-            {/* AI Recommendation */}
-            {profile?.aiCareerRecommendation && (
-              <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  Đề xuất nghề nghiệp từ AI
-                </h3>
-                <div className="prose prose-sm max-w-none text-gray-700">
-                  <ReactMarkdown>{profile.aiCareerRecommendation}</ReactMarkdown>
-                </div>
+              
+              <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 text-xs rounded-xl border border-yellow-100">
+                <strong>Note:</strong> This will replace your current progress and create a new path tailored to your updated skills and interests.
               </div>
-            )}
+            </div>
           </div>
         </div>
       </main>

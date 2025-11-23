@@ -10,10 +10,9 @@ interface RoadmapClientProps {
   career: any;
   roadmap: RoadmapData;
   studentId?: string;
-  isPersonalized?: boolean;
 }
 
-export default function RoadmapClient({ career, roadmap, studentId, isPersonalized }: RoadmapClientProps) {
+export default function RoadmapClient({ career, roadmap, studentId }: RoadmapClientProps) {
   const router = useRouter();
   const [selectedDetail, setSelectedDetail] = useState<DiagramDetailSelection | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -81,11 +80,8 @@ export default function RoadmapClient({ career, roadmap, studentId, isPersonaliz
             prerequisites: item.prerequisites,
             requiredSkills: item.requiredSkills,
             estimatedHours: item.estimatedHours,
-            priority: item.priority,
-            reason: item.reason,
-            advice: item.advice,
-            check: item.check,
-            status: item.status
+            personalization: item.personalization,
+            check: item.check
           });
           return;
         }
@@ -111,13 +107,8 @@ export default function RoadmapClient({ career, roadmap, studentId, isPersonaliz
               </svg>
               Back to Results
             </Link>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground">
               {career.title} Roadmap
-              {isPersonalized && (
-                <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full border border-indigo-200 font-bold uppercase tracking-wide">
-                  Personalized
-                </span>
-              )}
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -225,40 +216,37 @@ export default function RoadmapClient({ career, roadmap, studentId, isPersonaliz
                     {selectedDetail.title}
                   </h2>
 
-                  {/* Personalization Info */}
-                  {(selectedDetail.priority || selectedDetail.advice || selectedDetail.reason) && (
-                    <div className="mb-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                      <h4 className="font-bold text-primary text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
+                  {/* AI Recommendation */}
+                  {selectedDetail.personalization && (
+                    <div className="mb-6 bg-primary/5 rounded-xl p-4 border border-primary/10">
+                      <h4 className="font-bold text-primary text-xs uppercase tracking-wide mb-2 flex items-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         AI Recommendation
                       </h4>
-                      
-                      {selectedDetail.priority && (
-                        <div className="mb-3 flex items-center gap-2">
-                          <span className="text-sm font-medium text-muted-foreground">Priority:</span>
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                            selectedDetail.priority === 'high_priority' ? 'bg-red-100 text-red-700' :
-                            selectedDetail.priority === 'medium_priority' ? 'bg-orange-100 text-orange-700' :
-                            'bg-green-100 text-green-700'
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">Status:</span>
+                          <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${
+                            selectedDetail.personalization.status === 'already_mastered' ? 'bg-green-100 text-green-700 border-green-200' :
+                            selectedDetail.personalization.status === 'high_priority' ? 'bg-red-100 text-red-700 border-red-200' :
+                            selectedDetail.personalization.status === 'medium_priority' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                            selectedDetail.personalization.status === 'low_priority' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                            'bg-slate-100 text-slate-700 border-slate-200'
                           }`}>
-                            {selectedDetail.priority.replace('_', ' ')}
+                            {selectedDetail.personalization.status?.replace('_', ' ')}
                           </span>
                         </div>
-                      )}
-
-                      {selectedDetail.reason && (
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-muted-foreground block mb-1">Why this?</span>
-                          <p className="text-sm text-foreground">{selectedDetail.reason}</p>
-                        </div>
-                      )}
-
-                      {selectedDetail.advice && (
-                        <div>
-                          <span className="text-sm font-medium text-muted-foreground block mb-1">Advice:</span>
-                          <p className="text-sm text-foreground italic">"{selectedDetail.advice}"</p>
-                        </div>
-                      )}
+                        {selectedDetail.personalization.reason && (
+                          <p className="text-sm text-muted-foreground italic">
+                            "{selectedDetail.personalization.reason}"
+                          </p>
+                        )}
+                        {selectedDetail.personalization.description && (
+                           <p className="text-sm text-muted-foreground mt-2">
+                             {selectedDetail.personalization.description}
+                           </p>
+                        )}
+                      </div>
                     </div>
                   )}
                   

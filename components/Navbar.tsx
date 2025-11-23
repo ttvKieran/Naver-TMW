@@ -22,17 +22,15 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-sm border-b shadow-sm sticky top-0 z-50">
+    <nav className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-xl">🎓</span>
-            </div>
+          <Link href="/dashboard" className="flex items-center gap-3 group">
+            <img src="/leopath.png" alt="Leopath Logo" className="w-10 h-10 rounded-lg transition-transform" />
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-gray-900">Career Advisor</h1>
-              <p className="text-xs text-gray-600">AI-Powered Guidance</p>
+              <h1 className="text-lg font-bold text-foreground tracking-tight leading-none">Leopath</h1>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Dashboard</p>
             </div>
           </Link>
 
@@ -44,10 +42,10 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                      : 'text-muted-foreground hover:bg-muted hover:text-primary'
                   }`}
                 >
                   <span>{item.icon}</span>
@@ -62,10 +60,10 @@ export default function Navbar() {
             {session?.user && (
               <div className="hidden md:flex items-center gap-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{session.user.name}</p>
-                  <p className="text-xs text-gray-600">{session.user.studentCode || 'Student'}</p>
+                  <p className="text-sm font-medium text-foreground">{session.user.name}</p>
+                  <p className="text-xs text-muted-foreground">{session.user.studentCode || 'Student'}</p>
                 </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-800 rounded-full flex items-center justify-center text-secondary-foreground font-semibold shadow-md">
                   {session.user.name?.charAt(0).toUpperCase()}
                 </div>
               </div>
@@ -73,7 +71,7 @@ export default function Navbar() {
             
             <button
               onClick={handleLogout}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors font-medium text-sm"
             >
               Logout
             </button>
@@ -81,7 +79,7 @@ export default function Navbar() {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              className="md:hidden p-2 rounded-lg text-muted-foreground hover:bg-muted"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
@@ -96,44 +94,32 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t">
+          <div className="md:hidden py-4 border-t border-border">
             <div className="space-y-2">
               {navItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                       isActive
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className="font-medium">{item.name}</span>
+                    <span>{item.icon}</span>
+                    <span>{item.name}</span>
                   </Link>
                 );
               })}
               
-              <div className="pt-4 border-t">
-                {session?.user && (
-                  <div className="flex items-center gap-3 px-4 py-2 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {session.user.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{session.user.name}</p>
-                      <p className="text-xs text-gray-600">{session.user.studentCode || 'Student'}</p>
-                    </div>
-                  </div>
-                )}
+              <div className="pt-4 mt-4 border-t border-border">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                 >
-                  <span className="text-xl">🚪</span>
                   Logout
                 </button>
               </div>
