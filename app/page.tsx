@@ -284,7 +284,7 @@ export default async function Home() {
             <img src="leopath.png" alt="Leopath Logo" className="w-8 h-8"/>
             <span className="font-bold text-foreground">Leopath</span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2024 Leopath. Powered by Naver ClovaX.</p>
+          <p className="text-sm text-muted-foreground">© 2025 Leopath. Powered by Naver ClovaX.</p>
         </div>
       </footer>
     </div>
