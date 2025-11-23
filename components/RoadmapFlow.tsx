@@ -119,8 +119,9 @@ export default function RoadmapFlow({ roadmapData }: RoadmapFlowProps) {
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
-                onNodesChange={onNodesChange}
+            onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                zoomOnDoubleClick={false}
                 fitView
                 attributionPosition="bottom-right"
             >

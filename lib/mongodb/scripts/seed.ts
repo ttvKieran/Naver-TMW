@@ -1,4 +1,6 @@
-﻿import connectDB from '../connection';
+﻿import fs from 'fs';
+import path from 'path';
+import connectDB from '../connection';
 import mongoose from 'mongoose';
 
 import { User } from '../models/User';
@@ -29,182 +31,165 @@ async function seed() {
   console.log('Starting DB seed...');
   await clearCollections();
 
-  const user = await User.create({
-    email: 'phanlan@example.com',
-    password: '123',
-    passwordHash: 'seed-placeholder',
-    name: 'Phan Lan',
-    role: 'student',
-  });
+  // 1. Seed Careers and Roadmaps from data/jobs/*.json
+  const jobsDir = path.join(process.cwd(), 'data', 'jobs');
+  if (fs.existsSync(jobsDir)) {
+    const jobFiles = fs.readdirSync(jobsDir).filter(f => f.endsWith('.json'));
+    console.log(`Found ${jobFiles.length} job files.`);
 
-  const skillsPayload = [
-    { skillId: 'python', name: 'Python', category: 'technical', difficulty: 'beginner', demandLevel: 9 },
-    { skillId: 'git', name: 'Git', category: 'tool', difficulty: 'beginner', demandLevel: 8 },
-    { skillId: 'ds', name: 'Data Structures', category: 'technical', difficulty: 'intermediate', demandLevel: 8 },
-    { skillId: 'comm', name: 'Communication', category: 'soft-skill', difficulty: 'beginner', demandLevel: 7 },
-  ];
+    for (const file of jobFiles) {
+      const jobData = JSON.parse(fs.readFileSync(path.join(jobsDir, file), 'utf-8'));
+      console.log(`Processing ${jobData.career_name}...`);
+      
+      // Create Career
+      const career = await Career.create({
+        careerId: jobData.career_id,
+        title: jobData.career_name,
+        description: jobData.description,
+        category: 'Technology',
+        overview: {
+          salaryRange: { min: 10000000, max: 50000000, currency: 'VND', level: 'entry' },
+          jobGrowth: 'High',
+          difficulty: 'Medium',
+          timeToProficiency: '12-24 months'
+        },
+        requiredSkills: [],
+        isActive: true
+      });
 
-  const skills = await Skill.insertMany(skillsPayload);
-  console.log(`Inserted ${skills.length} skills`);
+      // Process stages/areas to find skills and courses
+      const levels = [];
+      for (const stage of jobData.stages) {
+         const phases = [];
+         for (const area of stage.areas) {
+            const skillsToLearn = [];
+            const recommendedCourses = [];
+            const milestones = [];
 
-  const skillMap = new Map(skills.map((s) => [s.skillId, s._id]));
+            for (const item of area.items) {
+               if (item.item_type === 'skill' || item.item_type === 'concept') {
+                  // Check if skill exists, if not create
+                  let skill = await Skill.findOne({ name: item.name });
+                  if (!skill) {
+                     skill = await Skill.create({
+                        skillId: item.id || item.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                        name: item.name,
+                        category: item.item_type === 'concept' ? 'technical' : 'technical', // Distinguish if needed
+                        difficulty: 'intermediate',
+                        description: item.description
+                     });
+                  }
+                  skillsToLearn.push({
+                     skillId: skill._id,
+                     targetProficiency: 5,
+                     priority: 'essential',
+                     skillTags: item.skill_tags || [],
+                     prerequisites: item.prerequisites || [],
+                     requiredSkills: item.required_skills || [],
+                     estimatedHours: item.estimated_hours
+                  });
+               } else if (item.item_type === 'course') {
+                  // Check if course exists
+                  let course = await Course.findOne({ name: item.name });
+                  if (!course) {
+                    course = await Course.create({
+                      courseId: item.id || item.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                      name: item.name,
+                      provider: 'Unknown',
+                      level: 'beginner',
+                      cost: { amount: 0, currency: 'VND' }
+                    });
+                  }
+                  recommendedCourses.push({
+                    courseId: course._id,
+                    isRequired: true,
+                    order: item.order_index || 1,
+                    prerequisites: item.prerequisites || [],
+                    estimatedHours: item.estimated_hours
+                  });
+               } else if (item.item_type === 'project') {
+                  milestones.push({
+                    title: item.name,
+                    description: item.description,
+                    skillsApplied: [], // Could link to skills if available
+                    deliverable: 'Project Code',
+                    prerequisites: item.prerequisites || [],
+                    requiredSkills: item.required_skills || [],
+                    estimatedHours: item.estimated_hours,
+                    skillTags: item.skill_tags || []
+                  });
+               }
+            }
+            
+            phases.push({
+               phaseId: area.id,
+               phaseNumber: area.order_index,
+               title: area.name,
+               description: area.description,
+               duration: '1 month',
+               skillsToLearn,
+               recommendedCourses,
+               milestones
+            });
+         }
+         levels.push({
+            levelId: stage.id,
+            levelNumber: stage.order_index,
+            title: stage.name,
+            description: stage.description,
+            duration: '3 months',
+            goals: [],
+            phases
+         });
+      }
 
-  const coursesPayload = [
-    {
-      courseId: 'python-beginners',
-      name: 'Python for Beginners',
-      provider: 'Coursera',
-      level: 'beginner',
-      skillsCovered: [{ skillId: skillMap.get('python'), proficiencyGained: 5 }],
-      cost: { amount: 0, currency: 'VND' },
-    },
-    {
-      courseId: 'git-essentials',
-      name: 'Git Essentials',
-      provider: 'Udemy',
-      level: 'beginner',
-      skillsCovered: [{ skillId: skillMap.get('git'), proficiencyGained: 4 }],
-      cost: { amount: 100000, currency: 'VND' },
-    },
-    {
-      courseId: 'ds-bootcamp',
-      name: 'Data Structures Bootcamp',
-      provider: 'edX',
-      level: 'intermediate',
-      skillsCovered: [{ skillId: skillMap.get('ds'), proficiencyGained: 6 }],
-      cost: { amount: 0, currency: 'VND' },
-    },
-  ];
+      await Roadmap.create({
+         careerId: career._id,
+         title: `${jobData.career_name} Roadmap`,
+         version: '1.0',
+         levels,
+         isActive: true
+      });
+    }
+  }
 
-  const courses = await Course.insertMany(coursesPayload as any);
-  console.log(`Inserted ${courses.length} courses`);
+  // 2. Seed Users/Students from data/users/users.json
+  const usersFile = path.join(process.cwd(), 'data', 'users', 'users.json');
+  if (fs.existsSync(usersFile)) {
+    const usersData = JSON.parse(fs.readFileSync(usersFile, 'utf-8'));
+    console.log(`Found ${usersData.length} users.`);
+    
+    // Limit to first 50 users to save time if needed, or seed all
+    for (const u of usersData.slice(0, 50)) {
+       const user = await User.create({
+          email: `${u.user_id.toLowerCase()}@example.com`,
+          password: 'password123',
+          name: u.full_name,
+          role: 'student'
+       });
 
-  const courseMap = new Map(courses.map((c) => [c.courseId, c._id]));
-
-  const backendCareer = await Career.create({
-    careerId: 'backend-dev',
-    title: 'Backend Developer',
-    category: 'Software Engineering',
-    description: 'Build server-side applications, APIs and backend systems.',
-    overview: {
-      salaryRange: { min: 8000000, max: 30000000, currency: 'VND', level: 'entry' },
-      jobGrowth: 'High',
-      difficulty: 'Medium',
-      timeToProficiency: '6-12 months',
-    },
-    requiredSkills: [
-      { skillId: skillMap.get('python'), importanceLevel: 'essential', minimumProficiency: 6, category: 'technical' },
-      { skillId: skillMap.get('git'), importanceLevel: 'recommended', minimumProficiency: 4, category: 'tool' },
-      { skillId: skillMap.get('ds'), importanceLevel: 'highly-recommended', minimumProficiency: 5, category: 'technical' },
-    ],
-    certifications: [],
-    education: { minimumDegree: 'Bachelor', preferredMajors: ['Computer Science'] },
-    companies: ['Company A', 'Company B'],
-    relatedCareers: [],
-    idealProfile: { personalityTypes: ['ISTJ', 'INTJ'], topSkills: [], minGPA: 2.5 },
-  });
-
-  console.log('Created Career:', backendCareer.careerId);
-
-  const roadmap = await Roadmap.create({
-    careerId: backendCareer._id,
-    title: 'Backend Developer Roadmap',
-    description: 'Progressive roadmap to become a backend developer.',
-    version: '1.0',
-    levels: [
-      {
-        levelId: 'lvl1',
-        levelNumber: 1,
-        title: 'Foundations',
-        duration: '1-2 months',
-        goals: ['Basic syntax', 'Version control'],
-        phases: [
-          {
-            phaseId: 'p1-1',
-            phaseNumber: 1,
-            title: 'Programming Basics',
-            duration: '2 weeks',
-            skillsToLearn: [
-              { skillId: skillMap.get('python'), targetProficiency: 4, priority: 'essential', estimatedTime: '10h' },
-            ],
-            recommendedCourses: [{ courseId: courseMap.get('python-beginners'), isRequired: true, order: 1 }],
-            milestones: [{ title: 'Hello world', skillsApplied: [skillMap.get('python')], deliverable: 'Scripts' }],
+       await Student.create({
+          userId: user._id,
+          studentCode: u.user_id,
+          fullName: u.full_name,
+          currentYear: Math.ceil(u.academic.current_semester / 2),
+          cpa: u.academic.gpa,
+          personality: {
+             traits: {
+               analytical: 5, creative: 5, teamwork: 5, leadership: 5, technical: 5
+             }
           },
-        ],
-      },
-    ],
-    isActive: true,
-  });
+          studentSkills: [],
+          studentCourses: []
+       });
+    }
+  }
 
-  console.log('Created Roadmap:', roadmap._id.toString());
-
-  const student = await Student.create({
-    userId: user._id,
-    studentCode: 'STU001',
-    fullName: 'Phan Lan',
-    university: 'Example University',
-    major: 'Computer Science',
-    cpa: 3.6,
-    personality: { mbti: 'ISTJ', traits: { analytical: 8, creative: 5, teamwork: 6, leadership: 5, technical: 7 }, assessmentDate: new Date(), assessmentSource: 'self' },
-    studentSkills: [
-      { skillId: skillMap.get('python'), proficiencyLevel: 5, lastAssessed: new Date(), source: 'self-assessment' },
-    ],
-    studentCourses: [{ courseId: courseMap.get('python-beginners'), status: 'completed', completionDate: new Date(), progress: 100 }],
-    interests: ['Backend Developer'],
-    currentCareer: 'Backend Developer',
-    careerStatus: 'decided',
-  });
-
-  console.log('Created Student:', student.studentCode);
-
-  const chat = await ChatSession.create({
-    userId: user._id,
-    studentId: student._id,
-    messages: [
-      { role: 'user', content: 'Tell me about Backend Developer', timestamp: new Date() },
-      { role: 'assistant', content: 'Backend Developer builds server...', timestamp: new Date() },
-    ],
-    metadata: { topic: 'career', careerDiscussed: 'Backend Developer' },
-    status: 'active',
-  });
-
-  console.log('Created ChatSession:', chat._id.toString());
-
-  const recommendation = await Recommendation.create({
-    studentId: student._id,
-    sessionId: chat._id,
-    recommendedCareers: [
-      {
-        careerId: backendCareer._id,
-        careerTitle: backendCareer.title,
-        matchScore: 82,
-        confidence: 'high',
-        strengths: ['Python'],
-        skillGaps: [
-          { skillId: skillMap.get('ds'), skillName: 'Data Structures', currentLevel: 2, requiredLevel: 5, gap: 3, priority: 'high' },
-        ],
-        recommendedCourses: [
-          { courseId: courseMap.get('ds-bootcamp'), reason: 'Covers core DS', priority: 1, skillsAddressed: [skillMap.get('ds')], estimatedImpact: 60 },
-        ],
-        recommendedRoadmap: roadmap._id,
-        rank: 1,
-      },
-    ],
-    studentSnapshot: { gpa: 3.6, skills: { python: 5 }, personality: student.personality, interests: student.interests },
-    aiAnalysis: { overallAssessment: 'Good fit', keyStrengths: ['Python'], areasForImprovement: ['DS'], careerReadiness: 'needs_preparation' },
-    engagement: { viewed: false },
-  });
-
-  console.log('Created Recommendation:', recommendation._id.toString());
-  console.log('Seed completed successfully.');
+  console.log('Database seeded successfully!');
+  process.exit(0);
 }
 
-seed()
-  .then(() => {
-    console.log('Seed finished.');
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error('Seed failed:', err);
-    process.exit(1);
-  });
+seed().catch((err) => {
+  console.error('Seed failed:', err);
+  process.exit(1);
+});

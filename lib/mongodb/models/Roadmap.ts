@@ -45,6 +45,10 @@ export interface IRoadmap {
         targetProficiency: number;
         priority: 'essential' | 'recommended' | 'optional';
         estimatedTime?: string;
+        skillTags?: string[];
+        prerequisites?: string[];
+        requiredSkills?: Array<{ tag: string; min_level: number }>;
+        estimatedHours?: number;
       }>;
       
       // Courses for this phase
@@ -53,6 +57,8 @@ export interface IRoadmap {
         isRequired: boolean;
         order: number;
         alternativeCourses?: mongoose.Types.ObjectId[];
+        prerequisites?: string[];
+        estimatedHours?: number;
       }>;
       
       // Projects/Milestones
@@ -63,6 +69,10 @@ export interface IRoadmap {
         estimatedTime?: string;
         deliverable?: string;
         resources?: string[];
+        prerequisites?: string[];
+        requiredSkills?: Array<{ tag: string; min_level: number }>;
+        estimatedHours?: number;
+        skillTags?: string[];
       }>;
       
       isOptional?: boolean;
@@ -203,6 +213,10 @@ const RoadmapSchema = new Schema<IRoadmap>(
                   default: 'recommended',
                 },
                 estimatedTime: String,
+                skillTags: [String],
+                prerequisites: [String],
+                requiredSkills: [{ tag: String, min_level: Number }],
+                estimatedHours: Number,
               },
             ],
             
@@ -225,6 +239,8 @@ const RoadmapSchema = new Schema<IRoadmap>(
                     ref: 'Course',
                   },
                 ],
+                prerequisites: [String],
+                estimatedHours: Number,
               },
             ],
             
@@ -245,6 +261,10 @@ const RoadmapSchema = new Schema<IRoadmap>(
                 estimatedTime: String,
                 deliverable: String,
                 resources: [String],
+                prerequisites: [String],
+                requiredSkills: [{ tag: String, min_level: Number }],
+                estimatedHours: Number,
+                skillTags: [String],
               },
             ],
             

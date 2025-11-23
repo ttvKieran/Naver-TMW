@@ -3,73 +3,57 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import CareerRoadmapDiagram, { DiagramDetailSelection } from "@/components/CareerRoadmapDiagram";
-import type { RoadmapPhases } from "@/lib/roadmapGraph";
+import type { RoadmapData } from "@/lib/roadmapGraph";
 
 interface RoadmapClientProps {
   career: any;
-  roadmap: RoadmapPhases;
+  roadmap: RoadmapData;
 }
 
 export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
-  const [expandedPhase, setExpandedPhase] = useState<string>('phase1');
-  const [selectedDetail, setSelectedDetail] = useState<null | {
-    kind: 'learning_path' | 'goal' | 'milestone';
-    phaseTitle: string;
-    title: string;
-    subtitle?: string;
-    resources?: string[];
-    projects?: string[];
-    milestone?: string | null;
-  }>(null);
-
-  const handlePhaseSelect = useCallback((phaseKey: string | null) => {
-    if (!phaseKey) {
-      setExpandedPhase('');
-      setSelectedDetail(null);
-      return;
-    }
-    setExpandedPhase(phaseKey);
-    setSelectedDetail(null);
-  }, []);
+  const [selectedDetail, setSelectedDetail] = useState<DiagramDetailSelection | null>(null);
 
   const handleDetailSelect = useCallback((detail: DiagramDetailSelection | null) => {
-    if (!detail) {
-      setSelectedDetail(null);
-      return;
-    }
+    setSelectedDetail(detail);
+  }, []);
 
-    if (!roadmap) return;
-    const phase = roadmap[detail.phaseKey];
-    if (!phase) return;
-
-    if (detail.type === 'topic') {
-      if (detail.source === 'learning_path' && phase.learning_path) {
-        const entry = phase.learning_path[detail.topicIndex];
-        if (!entry) return;
-        setSelectedDetail({
-          kind: 'learning_path',
-          phaseTitle: phase.title,
-          title: entry.topic,
-          subtitle: `Week ${entry.week}`,
-          resources: entry.resources,
-          projects: entry.projects,
-          milestone: detail.milestone,
-        });
-      } else {
-        const goal = phase.goals[detail.topicIndex];
-        if (!goal) return;
-        setSelectedDetail({
-          kind: 'goal',
-          phaseTitle: phase.title,
-          title: goal,
-          milestone: detail.milestone,
-        });
+  const findItemTitle = useCallback((itemId: string) => {
+    if (!roadmap) return itemId;
+    for (const stage of roadmap) {
+      for (const area of stage.areas) {
+        const item = area.items.find(i => i.itemId === itemId);
+        if (item) return item.title;
       }
-      return;
+    }
+    return itemId;
+  }, [roadmap]);
+
+  const selectItemById = useCallback((itemId: string) => {
+    if (!roadmap) return;
+    for (const stage of roadmap) {
+      for (const area of stage.areas) {
+        const item = area.items.find(i => i.itemId === itemId);
+        if (item) {
+          setSelectedDetail({
+            type: 'topic',
+            stageId: stage.stageId,
+            areaId: area.areaId,
+            itemId: item.itemId,
+            title: item.title,
+            category: item.category,
+            description: item.description,
+            skillTags: item.skillTags,
+            prerequisites: item.prerequisites,
+            requiredSkills: item.requiredSkills,
+            estimatedHours: item.estimatedHours
+          });
+          return;
+        }
+      }
     }
   }, [roadmap]);
 
-  const skills = career.skills || (career.required_skills ? [...(career.required_skills.technical || []), ...(career.required_skills.soft_skills || [])] : []);
+  const skills = career.skills || [];
   const certifications = career.certifications || [];
 
   return (
@@ -102,165 +86,169 @@ export default function RoadmapClient({ career, roadmap }: RoadmapClientProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Interactive Diagram */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm h-full">
-              <h2 className="text-xl font-bold mb-6 text-foreground flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">🗺️</span>
-                Interactive Roadmap
-              </h2>
-              <div className="h-[800px] w-full bg-background/50 rounded-2xl border border-border/50 overflow-hidden relative">
-                <CareerRoadmapDiagram
-                  phases={roadmap}
-                  onSelectPhase={handlePhaseSelect}
-                  onSelectDetail={handleDetailSelect}
-                />
-                <div className="absolute bottom-4 right-4 bg-card/90 backdrop-blur px-3 py-2 rounded-lg border border-border text-xs text-muted-foreground shadow-sm">
-                  Click nodes to view details
-                </div>
-              </div>
-            </div>
+      <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Diagram */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-1">
+            <CareerRoadmapDiagram
+              roadmapData={roadmap}
+              onSelectDetail={handleDetailSelect}
+            />
           </div>
 
-          {/* Right Column: Details & Info Panel */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
-              {selectedDetail ? (
-                <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-lg shadow-primary/5 ring-1 ring-primary/10 animate-in slide-in-from-right-4 duration-300">
-                  <div className="mb-4 pb-4 border-b border-border/50">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="text-xs font-bold text-primary uppercase tracking-wider">
-                        {selectedDetail.phaseTitle}
-                      </div>
-                      <button 
-                        onClick={() => setSelectedDetail(null)}
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground">
-                      {selectedDetail.title}
-                    </h3>
-                    {selectedDetail.subtitle && (
-                      <p className="text-sm text-muted-foreground mt-1 font-medium">
-                        {selectedDetail.subtitle}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-6">
-                    {selectedDetail.milestone && (
-                      <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 text-foreground p-5 rounded-xl border border-purple-500/20 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
-                        <div className="flex items-start gap-3 relative z-10">
-                          <span className="text-2xl">🚩</span>
-                          <div>
-                            <strong className="block text-purple-700 dark:text-purple-400 text-sm uppercase tracking-wide mb-1">Milestone Reached</strong>
-                            <p className="text-sm font-medium leading-relaxed">
-                              {selectedDetail.milestone}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedDetail.resources && selectedDetail.resources.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                          <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          </svg>
-                          Learning Resources
-                        </h4>
-                        <ul className="space-y-2">
-                          {selectedDetail.resources.map((resource, idx) => (
-                            <li key={idx} className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-                              {resource}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {selectedDetail.projects && selectedDetail.projects.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                          <svg className="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                          Hands-on Projects
-                        </h4>
-                        <ul className="space-y-2">
-                          {selectedDetail.projects.map((project, idx) => (
-                            <li key={idx} className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border/50 hover:border-secondary/30 transition-colors">
-                              {project}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {selectedDetail.kind === 'goal' && (
-                      <div className="bg-green-500/10 text-green-700 p-4 rounded-xl border border-green-500/20 text-sm">
-                        <strong>Goal:</strong> This is a key learning objective for this phase. Focus on mastering the concepts.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                  {/* Skills Section */}
-                  <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
-                      <span className="text-primary">🛠️</span> Key Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {skills.map((skill: string) => (
-                        <span key={skill} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-sm font-medium border border-border hover:border-primary/30 transition-colors">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Certifications Section */}
-                  <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
-                      <span className="text-secondary">🏆</span> Certifications
-                    </h3>
-                    <ul className="space-y-2">
-                      {certifications.map((cert: string) => (
-                        <li key={cert} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <svg className="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="flex-1">{cert}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Top Companies */}
-                  <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold mb-4 text-foreground flex items-center gap-2">
-                      <span className="text-green-500">🏢</span> Top Employers
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {career.companies?.map((company: string) => (
-                        <span key={company} className="px-3 py-1.5 bg-background border border-border rounded-lg text-sm font-bold text-foreground shadow-sm">
-                          {company}
-                        </span>
-                      )) || <span className="text-muted-foreground text-sm">Information not available</span>}
-                    </div>
-                  </div>
-                </div>
-              )}
+          {/* Career Overview Cards */}
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+              <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                </span>
+                Key Skills
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill: string, i: number) => (
+                  <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium border border-blue-100">
+                    {skill}
+                  </span>
+                ))}
+              </div>
             </div>
+
+            <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+              <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </span>
+                Certifications
+              </h3>
+              <ul className="space-y-2">
+                {certifications.map((cert: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0" />
+                    {cert}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div> */}
+        </div>
+
+        {/* Right Column: Details Panel */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-24 space-y-6">
+            {selectedDetail ? (
+              <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden animate-in slide-in-from-right-4 duration-300">
+                <div className="h-2 bg-gradient-to-r from-primary to-secondary" />
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                      selectedDetail.category === 'skill' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                      selectedDetail.category === 'project' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                      selectedDetail.category === 'course' ? 'bg-green-100 text-green-700 border-green-200' :
+                      'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}>
+                      {selectedDetail.category}
+                    </span>
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold text-foreground mb-3">
+                    {selectedDetail.title}
+                  </h2>
+                  
+                  <div className="prose prose-sm text-muted-foreground mb-6">
+                    <p>{selectedDetail.description || "No description available."}</p>
+                  </div>
+
+                  {/* Skill Tags */}
+                  {selectedDetail.skillTags && selectedDetail.skillTags.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-bold text-foreground text-xs uppercase tracking-wide mb-2">Tags</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedDetail.skillTags.map(tag => (
+                          <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium border border-border">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Estimated Hours */}
+                  {selectedDetail.estimatedHours && (
+                    <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <span>Estimated time: <span className="font-medium text-foreground">{selectedDetail.estimatedHours} hours</span></span>
+                    </div>
+                  )}
+
+                  {/* Prerequisites */}
+                  {selectedDetail.prerequisites && selectedDetail.prerequisites.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-bold text-foreground text-xs uppercase tracking-wide mb-2">Prerequisites</h4>
+                      <ul className="space-y-1">
+                        {selectedDetail.prerequisites.map(req => (
+                          <li key={req} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            <button 
+                              onClick={() => selectItemById(req)}
+                              className="hover:text-primary hover:underline text-left"
+                            >
+                              {findItemTitle(req)}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Required Skills */}
+                  {selectedDetail.requiredSkills && selectedDetail.requiredSkills.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-bold text-foreground text-xs uppercase tracking-wide mb-2">Required Skills</h4>
+                      <ul className="space-y-1">
+                        {selectedDetail.requiredSkills.map((req, i) => (
+                          <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                            {req.tag} (Level {req.min_level})
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedDetail.category === 'project' && (
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border">
+                      <h4 className="font-bold text-foreground text-sm mb-2 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                        Project Deliverable
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Complete this project to demonstrate your mastery of the concepts in this area.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
+                    <button className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSelectedDetail(null)}>
+                      Close
+                    </button>
+                    <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm">
+                      Mark as Complete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-card/50 rounded-2xl border border-dashed border-border p-8 text-center">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-2">Interactive Roadmap</h3>
+                <p className="text-sm text-muted-foreground">
+                  Click on any item in the roadmap to view details, resources, and track your progress.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>

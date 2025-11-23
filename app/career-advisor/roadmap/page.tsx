@@ -1,7 +1,94 @@
 import { Suspense } from "react";
-import roadmapsData from "@/data/career-roadmaps.json";
 import RoadmapClient from "./RoadmapClient";
-import type { RoadmapPhases } from "@/lib/roadmapGraph";
+import type { RoadmapData, RoadmapStage, RoadmapArea, RoadmapItem } from "@/lib/roadmapGraph";
+import connectDB from "@/lib/mongodb/connection";
+import { Career, Roadmap } from "@/lib/mongodb/models";
+
+// Helper to transform MongoDB Roadmap to RoadmapData
+function transformRoadmap(roadmapDoc: any): RoadmapData {
+  if (!roadmapDoc || !roadmapDoc.levels) return [];
+
+  return roadmapDoc.levels.map((level: any, levelIndex: number) => {
+    const areas: RoadmapArea[] = [];
+
+    if (level.phases) {
+      level.phases.forEach((p: any, phaseIndex: number) => {
+        const items: RoadmapItem[] = [];
+
+        // Add skills as items
+        if (p.skillsToLearn) {
+          p.skillsToLearn.forEach((skill: any, i: number) => {
+             if (skill.skillId) {
+               items.push({
+                 itemId: skill.skillId.skillId || `skill-${levelIndex}-${phaseIndex}-${i}`,
+                 type: 'skill',
+                 title: skill.skillId.name || "Unknown Skill",
+                 subtitle: skill.priority,
+                 description: skill.skillId.description,
+                 category: 'skill',
+                 skillTags: skill.skillTags,
+                 prerequisites: skill.prerequisites,
+                 requiredSkills: skill.requiredSkills,
+                 estimatedHours: skill.estimatedHours
+               });
+             }
+          });
+        }
+
+        // Add courses as items
+        if (p.recommendedCourses) {
+           p.recommendedCourses.forEach((course: any, i: number) => {
+             if (course.courseId) {
+               items.push({
+                 itemId: course.courseId.courseId || `course-${levelIndex}-${phaseIndex}-${i}`,
+                 type: 'course',
+                 title: course.courseId.name || "Unknown Course",
+                 subtitle: course.courseId.provider,
+                 description: `Level: ${course.courseId.level}`,
+                 category: 'course',
+                 prerequisites: course.prerequisites,
+                 estimatedHours: course.estimatedHours
+               });
+             }
+           });
+        }
+
+        // Add milestones as items (projects)
+        if (p.milestones) {
+          p.milestones.forEach((m: any, i: number) => {
+            items.push({
+              itemId: `project-${levelIndex}-${phaseIndex}-${i}`,
+              type: 'project',
+              title: m.title,
+              subtitle: 'Milestone',
+              description: m.description,
+              category: 'project',
+              skillTags: m.skillTags,
+              prerequisites: m.prerequisites,
+              requiredSkills: m.requiredSkills,
+              estimatedHours: m.estimatedHours
+            });
+          });
+        }
+
+        areas.push({
+          areaId: p.phaseId || p._id.toString(),
+          title: p.title,
+          description: p.description,
+          items
+        });
+      });
+    }
+
+    return {
+      stageId: level.levelId || level._id.toString(),
+      title: level.title,
+      description: level.description,
+      index: level.levelNumber,
+      areas
+    };
+  });
+}
 
 export default async function RoadmapPage({
   searchParams,
@@ -23,9 +110,16 @@ export default async function RoadmapPage({
     );
   }
 
-  const career = roadmapsData.careers.find(c => c.title === careerParam);
+  await connectDB();
 
-  if (!career) {
+  // Find career by title (case insensitive)
+  const careerDoc = await Career.findOne({ 
+    title: { $regex: new RegExp(`^${careerParam}$`, 'i') } 
+  })
+  .populate('requiredSkills.skillId')
+  .lean();
+
+  if (!careerDoc) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -37,9 +131,24 @@ export default async function RoadmapPage({
     );
   }
 
-  const roadmap = career.roadmap as RoadmapPhases;
+  const roadmapDoc = await Roadmap.findOne({ careerId: careerDoc._id })
+    .populate('levels.phases.skillsToLearn.skillId')
+    .populate('levels.phases.recommendedCourses.courseId')
+    .lean();
+
+  // Transform data for Client Component
+  const roadmap = transformRoadmap(roadmapDoc);
+  
+  // Transform Career for Client Component
+  const transformedCareer = {
+    title: careerDoc.title,
+    duration: careerDoc.overview?.timeToProficiency || "Unknown Duration",
+    level: careerDoc.overview?.difficulty || "All Levels",
+    skills: careerDoc.requiredSkills?.map((s: any) => s.skillId?.name) || [],
+    certifications: careerDoc.certifications || []
+  };
 
   return (
-    <RoadmapClient career={career} roadmap={roadmap} />
+    <RoadmapClient career={transformedCareer} roadmap={roadmap} />
   );
 }
