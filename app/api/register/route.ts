@@ -11,7 +11,8 @@ const NCP_API_KEY = process.env.NCP_API_KEY;
 const GENERATION_TASK_URL = process.env.NCP_CLOVASTUDIO_TUNING_ENDPOINT || 
   'https://clovastudio.stream.ntruss.com/v2/tasks/00vpqbzj/chat-completions';
 const HCX_007_URL = 'https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007';
-const CLOVA_RAG_ROADMAP_URL = 'http://localhost:8001/roadmap/personalized';
+const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8001';
+const CLOVA_RAG_ROADMAP_URL = `${PYTHON_API_URL}/roadmap/personalized`;
 
 // Map career names to available job files
 function mapCareerToJobFile(career: string): string {

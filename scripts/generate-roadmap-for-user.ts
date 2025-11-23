@@ -3,7 +3,8 @@ import connectDB from '../lib/mongodb/connection';
 import { Student } from '../lib/mongodb/models/Student';
 import { PersonalizedRoadmap } from '../lib/mongodb/models/PersonalizedRoadmap';
 
-const CLOVA_RAG_ROADMAP_URL = 'http://localhost:8001/roadmap/personalized';
+const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8001';
+const CLOVA_RAG_ROADMAP_URL = `${PYTHON_API_URL}/roadmap/personalized`;
 
 // Transform API response from snake_case to camelCase
 function transformRoadmapData(data: any): any {
